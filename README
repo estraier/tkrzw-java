@@ -1,0 +1,20 @@
+===============================================================
+ Java interface of Tkrzw
+================================================================
+
+Please read the following documents.
+
+  COPYING           - license
+  CONTRIBUTING.md   - how to contribute
+
+To build the library, JDK 9 or later version is required.
+Then, run these commands.
+
+  ./configure
+  make
+  make check
+  sudo make install
+
+Thanks.
+
+== END OF FILE ==
