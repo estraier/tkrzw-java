@@ -8,6 +8,7 @@ Please read the following documents.
   CONTRIBUTING.md   - how to contribute
 
 To build the library, JDK 9 or later version is required.
+The environment variable JAVA_HOME must be set properly.
 Then, run these commands.
 
   ./configure
