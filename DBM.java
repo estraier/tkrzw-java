@@ -374,9 +374,10 @@ public class DBM {
    * logical synchronization with the file system.
    * @param params Optional parameters.  If it is null, it is ignored.
    * @return The result status.
-   * @note Only SkipDBM uses the optional parameters.  The "reducer" parameter specifies the
-   * reducer to apply to records of the same key.  "ReduceToFirst", "ReduceToSecond",
-   * "ReduceToLast", etc are supported.
+   * @note Only SkipDBM uses the optional parameters.  The "merge" parameter specifies paths
+   * of databases to merge, separated by colon.  The "reducer" parameter specifies the reducer
+   * to apply to records of the same key.  "ReduceToFirst", "ReduceToSecond", "ReduceToLast",
+   * etc are supported.
    */
   public native Status synchronize(boolean hard, Map<String, String> params);
 
