@@ -487,6 +487,9 @@ public class Test {
       cur_value = export_dbm.increment("10000", 2, 0, status);
       check(status.equals(Status.SUCCESS));
       check(cur_value == 10004);
+      cur_value = export_dbm.increment("10000", Long.MIN_VALUE, 0, status);
+      check(status.equals(Status.SUCCESS));
+      check(cur_value == 10004);
       check(export_dbm.compareExchange("1", "100", "101").equals(Status.DUPLICATION_ERROR));
       check(export_dbm.compareExchange("1", "101", null).equals(Status.SUCCESS));
       String value = export_dbm.get("1", status);

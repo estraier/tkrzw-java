@@ -300,7 +300,8 @@ public class DBM {
   /**
    * Increments the numeric value of a record.
    * @param key The key of the record.
-   * @param inc The incremental value.
+   * @param inc The incremental value.  If it is Long.MIN_VALUE, the current value is not changed
+   * and a new record is not created.
    * @param init The initial value.
    * @param status The status object to store the result status.  If it is null, it is ignored.
    * @return The current value, or Long.MIN_VALUE on vailure
