@@ -160,7 +160,7 @@ apidoc :
 	    sed -e 's/public static class X/private static class X/' $$file > api-doc-tmp/$$file ; \
 	  done
 	$(JAVADOC) $(JAVADOCFLAGS) -windowtitle tkrzw -overview overview.html \
-	  -d api-doc api-doc-tmp/*.java
+	  -locale "en" -J-D"user.language=en" -d api-doc api-doc-tmp/*.java
 	rm -rf api-doc-tmp
 
 apidocclean :
