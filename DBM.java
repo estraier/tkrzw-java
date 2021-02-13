@@ -58,7 +58,7 @@ public class DBM {
    * @return The result status.
    * @note The extension of the path indicates the type of the database.
    * <ul>
-   * <li>.thh : File hash database (HashDBM)
+   * <li>.tkh : File hash database (HashDBM)
    * <li>.tkt : File tree database (TreeDBM)
    * <li>.tks : File skip database (SkipDBM)
    * <li>.tkmt : On-memory hash database (TinyDBM)
