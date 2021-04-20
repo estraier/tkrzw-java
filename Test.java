@@ -13,6 +13,7 @@
 
 package tkrzw;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -375,11 +376,15 @@ public class Test {
       for (int i = 0; i < 20; i++) {
         String key = String.format("%08d", i);
         String value = String.format("new-%d", i);
-        Status status = dbm.set(key, value, false);
+        StringBuffer old_value = i % 3 == 0 ? null : new StringBuffer();
+        Status status = dbm.set(key, value, false, old_value);
         if (i % 2 == 0) {
           check(status.equals(Status.SUCCESS));
         } else {
           check(status.equals(Status.DUPLICATION_ERROR));
+          if (old_value != null) {
+            check(old_value.toString().equals(String.format("%d", i)));
+          }
         }
       }
       check(dbm.synchronize(false, synchronize_params).equals(Status.SUCCESS));

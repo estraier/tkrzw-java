@@ -416,7 +416,8 @@ JNIEXPORT jbyteArray JNICALL Java_tkrzw_DBM_get
 
 // Implementation of DBM#set.
 JNIEXPORT jobject JNICALL Java_tkrzw_DBM_set
-(JNIEnv* env, jobject jself, jbyteArray jkey, jbyteArray jvalue, jboolean overwrite) {
+(JNIEnv* env, jobject jself, jbyteArray jkey, jbyteArray jvalue, jboolean overwrite,
+ jobject jold_value) {
   tkrzw::ParamDBM* dbm = GetDBM(env, jself);
   if (dbm == nullptr) {
     ThrowIllegalArgument(env, "not opened database");
@@ -428,7 +429,17 @@ JNIEXPORT jobject JNICALL Java_tkrzw_DBM_set
   }
   SoftByteArray key(env, jkey);
   SoftByteArray value(env, jvalue);
-  const tkrzw::Status status = dbm->Set(key.Get(), value.Get(), overwrite);
+  tkrzw::Status status;
+  if (jold_value == nullptr) {
+    status = dbm->Set(key.Get(), value.Get(), overwrite);
+  } else {
+    std::string old_value;
+    status = dbm->Set(key.Get(), value.Get(), overwrite, &old_value);
+    jclass cls_old_value = env->GetObjectClass(jold_value);
+    jmethodID id_write = env->GetMethodID(cls_old_value, "write", "([BII)V");
+    env->CallObjectMethod(
+        jold_value, id_write, NewByteArray(env, old_value), 0, old_value.size());
+  }
   return NewStatus(env, status);
 }
 

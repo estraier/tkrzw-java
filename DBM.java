@@ -13,6 +13,7 @@
 
 package tkrzw;
 
+import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -192,9 +193,25 @@ public class DBM {
    * @param overwrite Whether to overwrite the existing value if there's a record with the same
    * key.  If true, the existing value is overwritten by the new value.  If false, the operation
    * is given up and an error status is returned.
+   * @param old_value An object to contain the old value.  Assignment is done even on the
+   * duplication error.  If it is null, it is ignored.
    * @return The result status.
    */
-  public native Status set(byte[] key, byte[] value, boolean overwrite);
+  public native Status set(byte[] key, byte[] value, boolean overwrite,
+                           ByteArrayOutputStream old_value);
+
+  /**
+   * Sets a record of a key and a value.
+   * @param key The key of the record.
+   * @param value The value of the record.
+   * @param overwrite Whether to overwrite the existing value if there's a record with the same
+   * key.  If true, the existing value is overwritten by the new value.  If false, the operation
+   * is given up and an error status is returned.
+   * @return The result status.
+   */
+  public Status set(byte[] key, byte[] value, boolean overwrite) {
+    return set(key, value, overwrite, null);
+  }
 
   /**
    * Sets a record of a key and a value, with overwriting.
@@ -213,11 +230,33 @@ public class DBM {
    * @param overwrite Whether to overwrite the existing value if there's a record with the same
    * key.  If true, the existing value is overwritten by the new value.  If false, the operation
    * is given up and an error status is returned.
+   * @param old_value An object to contain the old value.  Assignment is done even on the
+   * duplication error.  If it is null, it is ignored.
+   * @return The result status.
+   */
+  public Status set(String key, String value, boolean overwrite, StringBuffer old_value) {
+    ByteArrayOutputStream old_value_bytes =
+        old_value == null ? null : new ByteArrayOutputStream();
+    Status status = set(key.getBytes(StandardCharsets.UTF_8),
+                        value.getBytes(StandardCharsets.UTF_8), overwrite, old_value_bytes);
+    if (old_value != null) {
+      old_value.append(new String(old_value_bytes.toByteArray(), StandardCharsets.UTF_8));
+    }
+    return status;
+  }
+
+  /**
+   * Sets a record of a key and a value, with string data.
+   * @param key The key of the record.
+   * @param value The value of the record.
+   * @param overwrite Whether to overwrite the existing value if there's a record with the same
+   * key.  If true, the existing value is overwritten by the new value.  If false, the operation
+   * is given up and an error status is returned.
    * @return The result status.
    */
   public Status set(String key, String value, boolean overwrite) {
     return set(key.getBytes(StandardCharsets.UTF_8),
-               value.getBytes(StandardCharsets.UTF_8), overwrite);
+               value.getBytes(StandardCharsets.UTF_8), overwrite, null);
   }
 
   /**
