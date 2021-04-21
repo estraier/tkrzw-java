@@ -382,6 +382,20 @@ public class Test {
           check(status.equals(Status.DUPLICATION_ERROR));
         }
       }
+      Status.AndValue sv = dbm.setAndGet("98765", "apple", false);
+      check(sv.status.equals(Status.SUCCESS));
+      check(sv.value == null);
+      if (class_name.equals("HashDBM") || class_name.equals("TreeDBM") ||
+          class_name.equals("TinyDBM") || class_name.equals("BabyDBM")) {
+        sv = dbm.setAndGet("98765", "orange", false);
+        check(sv.status.equals(Status.DUPLICATION_ERROR));
+        check(sv.value.equals("apple"));
+        sv = dbm.setAndGet("98765", "orange", true);
+        check(sv.status.equals(Status.SUCCESS));
+        check(sv.value.equals("apple"));
+        check(dbm.get("98765").equals("orange"));
+      }
+      check(dbm.remove("98765").equals(Status.SUCCESS));
       check(dbm.synchronize(false, synchronize_params).equals(Status.SUCCESS));
       HashMap<String, String> records = new HashMap<String, String>();
       for (int i = 0; i < 20; i++) {

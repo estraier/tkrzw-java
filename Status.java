@@ -185,6 +185,15 @@ public class Status {
     }
   }
 
+  /**
+   * Container of a status and another arbitrary object.
+   */
+  public static class AndValue<T> {
+    /** The status object. */
+    public Status status;
+    /** The value object. */
+    public T value;
+  }
 
   /** The status code. */
   private Code code_;

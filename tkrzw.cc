@@ -432,6 +432,67 @@ JNIEXPORT jobject JNICALL Java_tkrzw_DBM_set
   return NewStatus(env, status);
 }
 
+// Implementation of DBM#setAndGet.
+JNIEXPORT jobject JNICALL Java_tkrzw_DBM_setAndGet
+(JNIEnv* env, jobject jself, jbyteArray jkey, jbyteArray jvalue, jboolean overwrite) {
+  tkrzw::ParamDBM* dbm = GetDBM(env, jself);
+  if (dbm == nullptr) {
+    ThrowIllegalArgument(env, "not opened database");
+    return nullptr;
+  }
+  if (jkey == nullptr || jvalue == nullptr) {
+    ThrowNullPointer(env);
+    return nullptr;
+  }
+  SoftByteArray key(env, jkey);
+  SoftByteArray value(env, jvalue);
+  tkrzw::Status impl_status(tkrzw::Status::SUCCESS);
+  std::string old_value;
+  bool hit = false;
+  class Processor final : public tkrzw::DBM::RecordProcessor {
+   public:
+    Processor(tkrzw::Status* status, std::string_view value, bool overwrite,
+              std::string* old_value, bool* hit)
+        : status_(status), value_(value), overwrite_(overwrite),
+          old_value_(old_value), hit_(hit) {}
+    std::string_view ProcessFull(std::string_view key, std::string_view value) override {
+      *old_value_ = value;
+      *hit_ = true;
+      if (overwrite_) {
+        return value_;
+      }
+      status_->Set(tkrzw::Status::DUPLICATION_ERROR);
+      return NOOP;
+    }
+    std::string_view ProcessEmpty(std::string_view key) override {
+      return value_;
+    }
+   private:
+    tkrzw::Status* status_;
+    std::string_view value_;
+    bool overwrite_;
+    std::string* old_value_;
+    bool* hit_;
+  };
+  Processor proc(&impl_status, value.Get(), overwrite, &old_value, &hit);
+  tkrzw::Status status = dbm->Process(key.Get(), &proc, true);
+  status |= impl_status;
+  jobject jstatus = NewStatus(env, status);
+  jclass cls_andvalue = env->FindClass("tkrzw/Status$AndValue");
+  jmethodID id_init = env->GetMethodID(cls_andvalue, "<init>", "()V");
+  jobject jandvalue = env->NewObject(cls_andvalue, id_init);
+  jfieldID id_status = env->GetFieldID(cls_andvalue, "status", "Ltkrzw/Status;");
+  env->SetObjectField(jandvalue, id_status, jstatus);
+  if (hit) {
+    jfieldID id_value = env->GetFieldID(cls_andvalue, "value", "Ljava/lang/Object;");
+    jbyteArray jold_value = NewByteArray(env, old_value);
+    env->SetObjectField(jandvalue, id_value, jold_value);
+    env->DeleteLocalRef(jold_value);
+  }
+  env->DeleteLocalRef(jstatus);
+  return jandvalue;
+}
+
 // Implementation of DBM#remove.
 JNIEXPORT jobject JNICALL Java_tkrzw_DBM_remove
 (JNIEnv* env, jobject jself, jbyteArray jkey) {

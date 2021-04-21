@@ -231,6 +231,40 @@ public class DBM {
   }
 
   /**
+   * Sets a record and get the old value.
+   * @param key The key of the record.
+   * @param value The value of the record.
+   * @param overwrite Whether to overwrite the existing value if there's a record with the same
+   * key.  If true, the existing value is overwritten by the new value.  If false, the operation
+   * is given up and an error status is returned.
+   * @return The result status and the old value.  If the record has not existed when inserting
+   * the new record, null is assigned as the value.
+   */
+  public native Status.AndValue<byte[]> setAndGet(byte[] key, byte[] value, boolean overwrite);
+
+  /**
+   * Sets a record and get the old value, with string data.
+   * @param key The key of the record.
+   * @param value The value of the record.
+   * @param overwrite Whether to overwrite the existing value if there's a record with the same
+   * key.  If true, the existing value is overwritten by the new value.  If false, the operation
+   * is given up and an error status is returned.
+   * @return The result status and the old value.  If the record has not existed when inserting
+   * the new record, null is assigned as the value.
+   */
+  public Status.AndValue<String> setAndGet(String key, String value, boolean overwrite) {
+    Status.AndValue<byte[]> result = setAndGet(
+        key.getBytes(StandardCharsets.UTF_8), value.getBytes(StandardCharsets.UTF_8),
+        overwrite);
+    Status.AndValue<String> str_result = new Status.AndValue<String>();
+    str_result.status = result.status;
+    if (result.value != null) {
+      str_result.value = new String(result.value, StandardCharsets.UTF_8);
+    }
+    return str_result;
+  }
+
+  /**
    * Removes a record of a key.
    * @param key The key of the record.
    * @return The result status.
