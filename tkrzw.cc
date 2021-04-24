@@ -510,6 +510,56 @@ JNIEXPORT jobject JNICALL Java_tkrzw_DBM_remove
   return NewStatus(env, status);
 }
 
+// Implementation of DBM#removeAndGet.
+JNIEXPORT jobject JNICALL Java_tkrzw_DBM_removeAndGet
+(JNIEnv* env, jobject jself, jbyteArray jkey) {
+  tkrzw::ParamDBM* dbm = GetDBM(env, jself);
+  if (dbm == nullptr) {
+    ThrowIllegalArgument(env, "not opened database");
+    return nullptr;
+  }
+  if (jkey == nullptr) {
+    ThrowNullPointer(env);
+    return nullptr;
+  }
+  SoftByteArray key(env, jkey);
+  tkrzw::Status impl_status(tkrzw::Status::SUCCESS);
+  std::string old_value;
+  class Processor final : public tkrzw::DBM::RecordProcessor {
+   public:
+    Processor(tkrzw::Status* status, std::string* old_value)
+        : status_(status), old_value_(old_value) {}
+    std::string_view ProcessFull(std::string_view key, std::string_view value) override {
+      *old_value_ = value;
+      return REMOVE;
+    }
+    std::string_view ProcessEmpty(std::string_view key) override {
+      status_->Set(tkrzw::Status::NOT_FOUND_ERROR);
+      return NOOP;
+    }
+   private:
+    tkrzw::Status* status_;
+    std::string* old_value_;
+  };
+  Processor proc(&impl_status, &old_value);
+  tkrzw::Status status = dbm->Process(key.Get(), &proc, true);
+  status |= impl_status;
+  jobject jstatus = NewStatus(env, status);
+  jclass cls_andvalue = env->FindClass("tkrzw/Status$AndValue");
+  jmethodID id_init = env->GetMethodID(cls_andvalue, "<init>", "()V");
+  jobject jandvalue = env->NewObject(cls_andvalue, id_init);
+  jfieldID id_status = env->GetFieldID(cls_andvalue, "status", "Ltkrzw/Status;");
+  env->SetObjectField(jandvalue, id_status, jstatus);
+  if (status == tkrzw::Status::SUCCESS) {
+    jfieldID id_value = env->GetFieldID(cls_andvalue, "value", "Ljava/lang/Object;");
+    jbyteArray jold_value = NewByteArray(env, old_value);
+    env->SetObjectField(jandvalue, id_value, jold_value);
+    env->DeleteLocalRef(jold_value);
+  }
+  env->DeleteLocalRef(jstatus);
+  return jandvalue;
+}
+
 // Implementation of DBM#append.
 JNIEXPORT jobject JNICALL Java_tkrzw_DBM_append
 (JNIEnv* env, jobject jself, jbyteArray jkey, jbyteArray jvalue, jbyteArray jdelim) {

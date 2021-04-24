@@ -382,7 +382,7 @@ public class Test {
           check(status.equals(Status.DUPLICATION_ERROR));
         }
       }
-      Status.AndValue sv = dbm.setAndGet("98765", "apple", false);
+      Status.AndValue<String> sv = dbm.setAndGet("98765", "apple", false);
       check(sv.status.equals(Status.SUCCESS));
       check(sv.value == null);
       if (class_name.equals("HashDBM") || class_name.equals("TreeDBM") ||
@@ -394,6 +394,13 @@ public class Test {
         check(sv.status.equals(Status.SUCCESS));
         check(sv.value.equals("apple"));
         check(dbm.get("98765").equals("orange"));
+        sv = dbm.removeAndGet("98765");
+        check(sv.status.equals(Status.SUCCESS));
+        check(sv.value.equals("orange"));
+        sv = dbm.removeAndGet("98765");
+        check(sv.status.equals(Status.NOT_FOUND_ERROR));
+        check(sv.value == null);
+        check(dbm.set("98765", "banana").equals(Status.SUCCESS));
       }
       check(dbm.remove("98765").equals(Status.SUCCESS));
       check(dbm.synchronize(false, synchronize_params).equals(Status.SUCCESS));

@@ -281,6 +281,30 @@ public class DBM {
   }
 
   /**
+   * Removes a record and get the value.
+   * @param key The key of the record.
+   * @return The result status and the record value.  If the record does not exist, null is
+   * assigned
+   */
+  public native Status.AndValue<byte[]> removeAndGet(byte[] key);
+
+  /**
+   * Removes a record and get the value.
+   * @param key The key of the record.
+   * @return The result status and the record value.  If the record does not exist, null is
+   * assigned
+   */
+  public Status.AndValue<String> removeAndGet(String key) {
+    Status.AndValue<byte[]> result = removeAndGet(key.getBytes(StandardCharsets.UTF_8));
+    Status.AndValue<String> str_result = new Status.AndValue<String>();
+    str_result.status = result.status;
+    if (result.value != null) {
+      str_result.value = new String(result.value, StandardCharsets.UTF_8);
+    }
+    return str_result;
+  }
+
+  /**
    * Appends data at the end of a record of a key.
    * @param key The key of the record.
    * @param value The value to append.
