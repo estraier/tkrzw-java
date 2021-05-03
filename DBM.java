@@ -21,7 +21,7 @@ import java.util.Map;
 
 /**
  * Polymorphic database manager.
- * @note All operations except for Open and Close are thread-safe; Multiple threads can access
+ * @note All operations except for open and close are thread-safe; Multiple threads can access
  * the same database concurrently.  You can specify a data structure when you call the "open"
  * method.  Every opened database must be closed explicitly by the "close" method to avoid data
  * corruption.  Moreover, every unused database object should be destructed by the "destruct"
@@ -77,6 +77,9 @@ public class DBM {
    * <p>The optional parameter "dbm" supercedes the decision of the database type by the
    * extension.  The value is the type name: "HashDBM", "TreeDBM", "SkipDBM", "TinyDBM",
    * "BabyDBM", "CacheDBM", "StdHashDBM", "StdTreeDBM".
+   * <p>The optional parameter "file" specifies the internal file implementation class.
+   * The default file class is "MemoryMapAtomicFile".  The other supported classes are
+   * "StdFile", "MemoryMapAtomicFile", "PositionalParallelFile", and "PositionalAtomicFile".
    * <p>For HashDBM, these optional parameters are supported.
    * <ul>
    * <li>update_mode (string): How to update the database file: "UPDATE_IN_PLACE" for the
@@ -96,7 +99,7 @@ public class DBM {
    * <li>key_comparator (string): The comparator of record keys: "LexicalKeyComparator" for
    * the lexical order, "LexicalCaseKeyComparator" for the lexical order ignoring case,
    * "DecimalKeyComparator" for the order of the decimal integer numeric expressions,
-   * "HexadecimalKeyComparato" for the order of the hexadecimal integer numeric expressions,
+   * "HexadecimalKeyComparator" for the order of the hexadecimal integer numeric expressions,
    * "RealNumberKeyComparator" for the order of the decimal real number expressions.
    * </ul>
    * <p>For SkipDBM, these optional parameters are supported.
@@ -455,7 +458,7 @@ public class DBM {
    * @param dest_path A path to the destination file.
    * @return The result status.
    */
-  public native Status copyFile(String dest_path);
+  public native Status copyFileData(String dest_path);
 
   /**
    * Exports all records to another database.

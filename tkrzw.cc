@@ -722,7 +722,7 @@ JNIEXPORT jobject JNICALL Java_tkrzw_DBM_synchronize
 }
 
 // Implementation of DBM#copyFile.
-JNIEXPORT jobject JNICALL Java_tkrzw_DBM_copyFile
+JNIEXPORT jobject JNICALL Java_tkrzw_DBM_copyFileData
 (JNIEnv* env, jobject jself, jstring jdestpath) {
   tkrzw::ParamDBM* dbm = GetDBM(env, jself);
   if (dbm == nullptr) {
@@ -734,7 +734,7 @@ JNIEXPORT jobject JNICALL Java_tkrzw_DBM_copyFile
     return nullptr;
   }
   SoftString destpath(env, jdestpath);
-  const tkrzw::Status status = dbm->CopyFile(destpath.Get());
+  const tkrzw::Status status = dbm->CopyFileData(destpath.Get());
   return NewStatus(env, status);
 }
 

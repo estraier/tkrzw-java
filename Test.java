@@ -465,7 +465,7 @@ public class Test {
         if (parts.length > 1) {
           copy_path += "." + parts[1];
         }
-        check(dbm.copyFile(copy_path).equals(Status.SUCCESS));
+        check(dbm.copyFileData(copy_path).equals(Status.SUCCESS));
         DBM copy_dbm = new DBM();
         if (path.indexOf(".") >= 0) {
           check(copy_dbm.open(copy_path, false).equals(Status.SUCCESS));
