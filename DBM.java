@@ -129,10 +129,12 @@ public class DBM {
    * </ul>
    * <p>For the file "PositionalParallelFile" and "PositionalAtomicFile", these optional
    * parameters are supported.
+   * <ul>
    * <li>block_size (int): The block size to which all blocks should be aligned.
    * <li>access_options (str): Values separated by colon.  "direct" for direct I/O.  "sync" for
    * synchrnizing I/O, "padding" for file size alignment by padding, "pagecache" for the mini
    * page cache in the process.
+   * </ul>
    * <p>If the optional parameter "num_shards" is set, the database is sharded into multiple
    * shard files.  Each file has a suffix like "-00003-of-00015".  If the value is 0, the number
    * of shards is set by patterns of the existing files, or 1 if they doesn't exist.
