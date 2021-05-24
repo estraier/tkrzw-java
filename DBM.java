@@ -88,6 +88,7 @@ public class DBM {
    * <li>align_pow (int): The power to align records.
    * <li>num_buckets (int): The number of buckets for hashing.
    * <li>fbp_capacity (int): The capacity of the free block pool.
+   * <li>min_read_size (int): The minimum reading size to read a record.
    * <li>lock_mem_buckets (int): Positive to lock the memory for the hash buckets.
    * <li>cache_buckets (int): Positive to cache the hash buckets on memory.
    * </ul>
