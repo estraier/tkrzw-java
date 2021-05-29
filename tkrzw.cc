@@ -219,8 +219,58 @@ static void SetFile(JNIEnv* env, jobject jfile, tkrzw::File* file) {
   env->SetLongField(jfile, id_file_ptr, (intptr_t)file);
 }
 
-// Converts a Java string map into a C++ string map.
+// Converts a Java byte array map into a C++ string map.
 static std::map<std::string, std::string> JMapToCMap(JNIEnv* env, jobject jmap) {
+  std::map<std::string, std::string> map;
+  jclass cls_map = env->GetObjectClass(jmap);
+  jmethodID id_entryset = env->GetMethodID(cls_map, "entrySet", "()Ljava/util/Set;");
+  jobject jset = env->CallObjectMethod(jmap, id_entryset);
+  jclass cls_set = env->GetObjectClass(jset);
+  jmethodID id_iterator = env->GetMethodID(cls_set, "iterator", "()Ljava/util/Iterator;");
+  jobject jiter = env->CallObjectMethod(jset, id_iterator);
+  jclass cls_iter = env->GetObjectClass(jiter);
+  jmethodID id_hasnext = env->GetMethodID(cls_iter, "hasNext", "()Z");
+  jmethodID id_next = env->GetMethodID(cls_iter, "next", "()Ljava/lang/Object;");
+  while (env->CallBooleanMethod(jiter, id_hasnext)) {
+    jobject jpair = env->CallObjectMethod(jiter, id_next);
+    jclass cls_pair = env->GetObjectClass(jpair);
+    jmethodID id_getkey = env->GetMethodID(cls_pair, "getKey", "()Ljava/lang/Object;");
+    jmethodID id_getvalue = env->GetMethodID(cls_pair, "getValue", "()Ljava/lang/Object;");
+    jbyteArray jkey = (jbyteArray)env->CallObjectMethod(jpair, id_getkey);
+    jbyteArray jvalue = (jbyteArray)env->CallObjectMethod(jpair, id_getvalue);
+    {
+      SoftByteArray key(env, jkey);
+      SoftByteArray value(env, jvalue);
+      map.emplace(key.Get(), value.Get());
+    }
+    env->DeleteLocalRef(jkey);
+    env->DeleteLocalRef(jvalue);
+    env->DeleteLocalRef(jpair);
+  }
+  env->DeleteLocalRef(jiter);
+  env->DeleteLocalRef(jset);
+  return map;
+}
+
+// Converts a C++ string map into a Java byte array map.
+static jobject CMapToJMap(JNIEnv* env, const std::map<std::string, std::string>& map) {
+  jclass cls_map = env->FindClass("java/util/HashMap");
+  jmethodID id_map_init = env->GetMethodID(cls_map, "<init>", "(I)V");
+  jmethodID id_map_put =  env->GetMethodID(
+      cls_map, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
+  jobject jmap = env->NewObject(cls_map, id_map_init, map.size() * 2 + 1);
+  for (const auto& rec : map) {
+    jbyteArray jkey = NewByteArray(env, rec.first);
+    jbyteArray jvalue = NewByteArray(env, rec.second);
+    env->CallObjectMethod(jmap, id_map_put, jkey, jvalue);
+    env->DeleteLocalRef(jkey);
+    env->DeleteLocalRef(jvalue);
+  }
+  return jmap;
+}
+
+// Converts a Java string map into a C++ string map.
+static std::map<std::string, std::string> JMapStrToCMap(JNIEnv* env, jobject jmap) {
   std::map<std::string, std::string> map;
   jclass cls_map = env->GetObjectClass(jmap);
   jmethodID id_entryset = env->GetMethodID(cls_map, "entrySet", "()Ljava/util/Set;");
@@ -238,9 +288,11 @@ static std::map<std::string, std::string> JMapToCMap(JNIEnv* env, jobject jmap) 
     jmethodID id_getvalue = env->GetMethodID(cls_pair, "getValue", "()Ljava/lang/Object;");
     jstring jkey = (jstring)env->CallObjectMethod(jpair, id_getkey);
     jstring jvalue = (jstring)env->CallObjectMethod(jpair, id_getvalue);
-    SoftString key(env, jkey);
-    SoftString value(env, jvalue);
-    map.emplace(key.Get(), value.Get());
+    {
+      SoftString key(env, jkey);
+      SoftString value(env, jvalue);
+      map.emplace(key.Get(), value.Get());
+    }
     env->DeleteLocalRef(jkey);
     env->DeleteLocalRef(jvalue);
     env->DeleteLocalRef(jpair);
@@ -251,7 +303,7 @@ static std::map<std::string, std::string> JMapToCMap(JNIEnv* env, jobject jmap) 
 }
 
 // Converts a C++ string map into a Java string map.
-static jobject CMapToJMap(JNIEnv* env, const std::map<std::string, std::string>& map) {
+static jobject CMapToJMapStr(JNIEnv* env, const std::map<std::string, std::string>& map) {
   jclass cls_map = env->FindClass("java/util/HashMap");
   jmethodID id_map_init = env->GetMethodID(cls_map, "<init>", "(I)V");
   jmethodID id_map_put =  env->GetMethodID(
@@ -341,7 +393,7 @@ JNIEXPORT jobject JNICALL Java_tkrzw_DBM_open
   SoftString path(env, jpath);
   std::map<std::string, std::string> params;
   if (jparams != nullptr) {
-    params = JMapToCMap(env, jparams);
+    params = JMapStrToCMap(env, jparams);
   }
   const int32_t num_shards = tkrzw::StrToInt(tkrzw::SearchMap(params, "num_shards", "-1"));
   int32_t open_options = 0;
@@ -414,6 +466,30 @@ JNIEXPORT jbyteArray JNICALL Java_tkrzw_DBM_get
   return nullptr;
 }
 
+// Implementation of DBM#getMulti.
+JNIEXPORT jobject JNICALL Java_tkrzw_DBM_getMulti
+(JNIEnv* env, jobject jself, jobjectArray jkeys) {
+  tkrzw::ParamDBM* dbm = GetDBM(env, jself);
+  if (dbm == nullptr) {
+    ThrowIllegalArgument(env, "not opened database");
+    return nullptr;
+  }
+  if (jkeys == nullptr) {
+    ThrowNullPointer(env);
+    return nullptr;
+  }
+  std::vector<std::string> keys;
+  const int32_t num_keys = env->GetArrayLength(jkeys);
+  for (int32_t i = 0; i < num_keys; i++) {
+    jbyteArray jkey = (jbyteArray)env->GetObjectArrayElement(jkeys, i);
+    SoftByteArray key(env, jkey);
+    keys.emplace_back(key.Get());
+  }
+  std::vector<std::string_view> key_views(keys.begin(), keys.end());
+  const std::map<std::string, std::string>& records = dbm->GetMulti(key_views);
+  return CMapToJMap(env, records);
+}
+
 // Implementation of DBM#set.
 JNIEXPORT jobject JNICALL Java_tkrzw_DBM_set
 (JNIEnv* env, jobject jself, jbyteArray jkey, jbyteArray jvalue, jboolean overwrite) {
@@ -429,6 +505,28 @@ JNIEXPORT jobject JNICALL Java_tkrzw_DBM_set
   SoftByteArray key(env, jkey);
   SoftByteArray value(env, jvalue);
   const tkrzw::Status status = dbm->Set(key.Get(), value.Get(), overwrite);
+  return NewStatus(env, status);
+}
+
+// Implementation of DBM#SetMulti.
+JNIEXPORT jobject JNICALL Java_tkrzw_DBM_setMulti
+(JNIEnv* env, jobject jself, jobject jrecords, jboolean overwrite) {
+  tkrzw::ParamDBM* dbm = GetDBM(env, jself);
+  if (dbm == nullptr) {
+    ThrowIllegalArgument(env, "not opened database");
+    return nullptr;
+  }
+  if (jrecords == nullptr) {
+    ThrowNullPointer(env);
+    return nullptr;
+  }
+  const std::map<std::string, std::string>& records = JMapToCMap(env, jrecords);
+  std::map<std::string_view, std::string_view> record_views;
+  for (const auto& record : records) {
+    record_views.emplace(std::pair(
+        std::string_view(record.first), std::string_view(record.second)));
+  }
+  const tkrzw::Status status = dbm->SetMulti(record_views, overwrite);
   return NewStatus(env, status);
 }
 
@@ -507,6 +605,30 @@ JNIEXPORT jobject JNICALL Java_tkrzw_DBM_remove
   }
   SoftByteArray key(env, jkey);
   const tkrzw::Status status = dbm->Remove(key.Get());
+  return NewStatus(env, status);
+}
+
+// Implementation of DBM#removeMulti.
+JNIEXPORT jobject JNICALL Java_tkrzw_DBM_removeMulti
+(JNIEnv* env, jobject jself, jobjectArray jkeys) {
+  tkrzw::ParamDBM* dbm = GetDBM(env, jself);
+  if (dbm == nullptr) {
+    ThrowIllegalArgument(env, "not opened database");
+    return nullptr;
+  }
+  if (jkeys == nullptr) {
+    ThrowNullPointer(env);
+    return nullptr;
+  }
+  std::vector<std::string> keys;
+  const int32_t num_keys = env->GetArrayLength(jkeys);
+  for (int32_t i = 0; i < num_keys; i++) {
+    jbyteArray jkey = (jbyteArray)env->GetObjectArrayElement(jkeys, i);
+    SoftByteArray key(env, jkey);
+    keys.emplace_back(key.Get());
+  }
+  std::vector<std::string_view> key_views(keys.begin(), keys.end());
+  const tkrzw::Status status = dbm->RemoveMulti(key_views);
   return NewStatus(env, status);
 }
 
@@ -688,7 +810,7 @@ JNIEXPORT jobject JNICALL Java_tkrzw_DBM_rebuild
   }
   std::map<std::string, std::string> params;
   if (jparams != nullptr) {
-    params = JMapToCMap(env, jparams);
+    params = JMapStrToCMap(env, jparams);
   }
   const tkrzw::Status status = dbm->RebuildAdvanced(params);
   return NewStatus(env, status);
@@ -715,7 +837,7 @@ JNIEXPORT jobject JNICALL Java_tkrzw_DBM_synchronize
   }
   std::map<std::string, std::string> params;
   if (jparams != nullptr) {
-    params = JMapToCMap(env, jparams);
+    params = JMapStrToCMap(env, jparams);
   }
   const tkrzw::Status status = dbm->SynchronizeAdvanced(hard, nullptr, params);
   return NewStatus(env, status);
@@ -792,7 +914,7 @@ JNIEXPORT jobject JNICALL Java_tkrzw_DBM_inspect
   }
   const auto& records = dbm->Inspect();
   const std::map<std::string, std::string> rec_map(records.begin(), records.end());
-  return CMapToJMap(env, rec_map);
+  return CMapToJMapStr(env, rec_map);
 }
 
 // Implementation of DBM#isOpen.

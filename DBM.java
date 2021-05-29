@@ -199,6 +199,33 @@ public class DBM {
   }
 
   /**
+   * Gets the values of multiple records of keys.
+   * @param keys The keys of records to retrieve.
+   * @return A map of retrieved records.  Keys which don't match existing records are ignored.
+   */
+  public native Map<byte[], byte[]> getMulti(byte[][] keys);
+
+  /**
+   * Gets the values of multiple records of keys, with string data.
+   * @param keys The keys of records to retrieve.
+   * @return A map of retrieved records.  Keys which don't match existing records are ignored.
+   */
+  public Map<String, String> getMulti(String[] keys) {
+    byte[][] rawKeys = new byte[keys.length][];
+    for (int i = 0; i < keys.length; i++) {
+      rawKeys[i] = keys[i].getBytes(StandardCharsets.UTF_8);
+    }
+    Map<byte[], byte[]> records = getMulti(rawKeys);
+    Map<String, String> strRecords = new HashMap<String, String>();
+    for (Map.Entry<byte[], byte[]> record : records.entrySet()) {
+      strRecords.put(
+          new String(record.getKey(), StandardCharsets.UTF_8),
+          new String(record.getValue(), StandardCharsets.UTF_8));
+    }
+    return strRecords;
+  }
+
+  /**
    * Sets a record of a key and a value.
    * @param key The key of the record.
    * @param value The value of the record.
@@ -241,6 +268,33 @@ public class DBM {
    */
   public Status set(String key, String value) {
     return set(key, value, true);
+  }
+
+  /**
+   * Sets multiple records.
+   * @param records The records to store.
+   * @param overwrite Whether to overwrite the existing value if there's a record with the same
+   * key.  If true, the existing value is overwritten by the new value.  If false, the operation
+   * is given up and an error status is returned.
+   * @return The result status.
+   */
+  public native Status setMulti(Map<byte[], byte[]> records, boolean overwrite);
+
+  /**
+   * Sets multiple records, with string data.
+   * @param records The records to store.
+   * @param overwrite Whether to overwrite the existing value if there's a record with the same
+   * key.  If true, the existing value is overwritten by the new value.  If false, the operation
+   * is given up and an error status is returned.
+   * @return The result status.
+   */
+  public Status setMultiStr(Map<String, String> records, boolean overwrite) {
+    Map<byte[], byte[]> rawRecords = new HashMap();
+    for (Map.Entry<String, String> record : records.entrySet()) {
+      rawRecords.put(record.getKey().getBytes(StandardCharsets.UTF_8),
+                     record.getValue().getBytes(StandardCharsets.UTF_8));
+    }
+    return setMulti(rawRecords, overwrite);
   }
 
   /**
@@ -291,6 +345,26 @@ public class DBM {
    */
   public Status remove(String key) {
     return remove(key.getBytes(StandardCharsets.UTF_8));
+  }
+
+  /**
+   * Removes records of keys.
+   * @param keys The keys of records to remove.
+   * @return The result status.
+   */
+  public native Status removeMulti(byte[][] keys);
+
+  /**
+   * Removes records of keys, with string data.
+   * @param keys The keys of records to remove.
+   * @return The result status.
+   */
+  public Status removeMulti(String[] keys) {
+    byte[][] rawKeys = new byte[keys.length][];
+    for (int i = 0; i < keys.length; i++) {
+      rawKeys[i] = keys[i].getBytes(StandardCharsets.UTF_8);
+    }
+    return removeMulti(rawKeys);
   }
 
   /**

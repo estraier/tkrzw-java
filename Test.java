@@ -524,6 +524,25 @@ public class Test {
       check(export_dbm.append("foo", "baz", ",").equals(Status.SUCCESS));
       check(export_dbm.append("foo", "qux", "").equals(Status.SUCCESS));
       check(export_dbm.get("foo").equals("bar,bazqux"));
+      Map<String, String> multi_records = Map.of(
+          "one", "first", "two", "second", "three", "third");
+      check(export_dbm.setMultiStr(multi_records, true).equals(Status.SUCCESS));
+      String[] multi_keys = {"one", "two", "three", "four"};
+      multi_records = export_dbm.getMulti(multi_keys);
+      check(multi_records.get("one").equals("first"));
+      check(multi_records.get("two").equals("second"));
+      check(multi_records.get("three").equals("third"));
+      String[] half_keys = {"one", "two"};
+      check(export_dbm.removeMulti(half_keys).equals(Status.SUCCESS));
+      check(export_dbm.get("one", status) == null);
+      check(status.equals(Status.NOT_FOUND_ERROR));
+      check(export_dbm.get("two", status) == null);
+      check(status.equals(Status.NOT_FOUND_ERROR));
+      check(export_dbm.removeMulti(multi_keys).equals(Status.NOT_FOUND_ERROR));
+      check(export_dbm.get("three", status) == null);
+      check(status.equals(Status.NOT_FOUND_ERROR));
+      check(export_dbm.get("four", status) == null);
+      check(status.equals(Status.NOT_FOUND_ERROR));
       check(export_dbm.close().equals(Status.SUCCESS));
       export_dbm.destruct();
       iter.destruct();
