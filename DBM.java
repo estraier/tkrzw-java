@@ -253,7 +253,7 @@ public class DBM {
    * @param overwrite Whether to overwrite the existing value if there's a record with the same
    * key.  If true, the existing value is overwritten by the new value.  If false, the operation
    * is given up and an error status is returned.
-   * @return The result status.
+   * @return The result status.  If overwriting is abandoned, DUPLICATION_ERROR is returned.
    */
   public Status set(String key, String value, boolean overwrite) {
     return set(key.getBytes(StandardCharsets.UTF_8),
@@ -276,7 +276,8 @@ public class DBM {
    * @param overwrite Whether to overwrite the existing value if there's a record with the same
    * key.  If true, the existing value is overwritten by the new value.  If false, the operation
    * is given up and an error status is returned.
-   * @return The result status.
+   * @return The result status.  If there are records avoiding overwriting, DUPLICATION_ERROR
+   * is returned.
    */
   public native Status setMulti(Map<byte[], byte[]> records, boolean overwrite);
 
@@ -341,7 +342,7 @@ public class DBM {
   /**
    * Removes a record of a key, with string data.
    * @param key The key of the record.
-   * @return The result status.
+   * @return The result status.  If there's no matching record, NOT_FOUND_ERROR is returned.
    */
   public Status remove(String key) {
     return remove(key.getBytes(StandardCharsets.UTF_8));
@@ -350,7 +351,7 @@ public class DBM {
   /**
    * Removes records of keys.
    * @param keys The keys of records to remove.
-   * @return The result status.
+   * @return The result status.  If there are missing records, NOT_FOUND_ERROR is returned.
    */
   public native Status removeMulti(byte[][] keys);
 
@@ -417,12 +418,9 @@ public class DBM {
   /**
    * Compares the value of a record and exchanges if the condition meets.
    * @param key The key of the record.
-   * @param expected The expected value.
+   * @param expected The expected value.  If it is null, no existing record is expected.
    * @param desired The desired value.  If it is null, the record is to be removed.
-   * @return The result status.
-   * @note If the record doesn't exist, NOT_FOUND_ERROR is returned.  If the existing value is
-   * different from the expected value, DUPLICATION_ERROR is returned.  Otherwise, the desired
-   * value is set.
+   * @return The result status.  If the condition doesn't meet, INFEASIBLE_ERROR is returned.
    */
   public native Status compareExchange(byte[] key, byte[] expected, byte[] desired);
 
@@ -438,7 +436,7 @@ public class DBM {
    */
   public Status compareExchange(String key, String expected, String desired) {
     return compareExchange(key.getBytes(StandardCharsets.UTF_8),
-                           expected.getBytes(StandardCharsets.UTF_8),
+                           expected == null ? null : expected.getBytes(StandardCharsets.UTF_8),
                            desired == null ? null : desired.getBytes(StandardCharsets.UTF_8));
   }
 

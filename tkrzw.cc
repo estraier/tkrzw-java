@@ -709,20 +709,24 @@ JNIEXPORT jobject JNICALL Java_tkrzw_DBM_compareExchange
     ThrowIllegalArgument(env, "not opened database");
     return nullptr;
   }
-  if (jkey == nullptr || jexpected == nullptr) {
+  if (jkey == nullptr) {
     ThrowNullPointer(env);
     return nullptr;
   }
   SoftByteArray key(env, jkey);
-  SoftByteArray expected(env, jexpected);
-  tkrzw::Status status(tkrzw::Status::SUCCESS);
-  if (jdesired == nullptr) {
-    std::string_view desired;
-    status = dbm->CompareExchange(key.Get(), expected.Get(), desired);
-  } else {
-    SoftByteArray desired(env, jdesired);
-    status = dbm->CompareExchange(key.Get(), expected.Get(), desired.Get());
+  std::unique_ptr<SoftByteArray> expected;
+  std::string_view expected_view;
+  if (jexpected != nullptr) {
+    expected = std::make_unique<SoftByteArray>(env, jexpected);
+    expected_view = expected->Get();
   }
+  std::unique_ptr<SoftByteArray> desired;
+  std::string_view desired_view;
+  if (jdesired != nullptr) {
+    desired = std::make_unique<SoftByteArray>(env, jdesired);
+    desired_view = desired->Get();
+  }
+  const tkrzw::Status status = dbm->CompareExchange(key.Get(), expected_view, desired_view);
   return NewStatus(env, status);
 }
 
