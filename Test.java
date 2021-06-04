@@ -211,6 +211,17 @@ public class Test {
   }
 
   /**
+   * Makes a string map of the given key/value pairs.
+   */
+  private static Map<String, String> makeStrMap(String... elems) {
+    Map map = new HashMap(elems.length);
+    for (int i = 0; i < elems.length - 1; i += 2) {
+      map.put(elems[i], elems[i + 1]);
+    }
+    return map;
+  }
+
+  /**
    * Runs the utility test.
    */
   private static int runUtility() {
@@ -522,6 +533,26 @@ public class Test {
       check(export_iter.first().equals(Status.SUCCESS));
       check(export_iter.set("foobar").equals(Status.SUCCESS));
       check(export_iter.remove().equals(Status.SUCCESS));
+      check(export_dbm.compareExchangeMultiStr(
+          makeStrMap("hop", null, "step", null),
+          makeStrMap("hop", "one", "step", "two")).equals(Status.SUCCESS));
+      check(export_dbm.get("hop").equals("one"));
+      check(export_dbm.get("step").equals("two"));
+      check(export_dbm.compareExchangeMultiStr(
+          makeStrMap("hop", "one", "step", null),
+          makeStrMap("hop", "uno", "step", "dos")).equals(Status.INFEASIBLE_ERROR));
+      check(export_dbm.get("hop").equals("one"));
+      check(export_dbm.get("step").equals("two"));
+      check(export_dbm.compareExchangeMultiStr(
+          makeStrMap("hop", "one", "step", "two"),
+          makeStrMap("hop", "1", "step", "2")).equals(Status.SUCCESS));
+      check(export_dbm.get("hop").equals("1"));
+      check(export_dbm.get("step").equals("2"));
+      check(export_dbm.compareExchangeMultiStr(
+          makeStrMap("hop", "1", "step", "2"),
+          makeStrMap("hop", null, "step", null)).equals(Status.SUCCESS));
+      check(export_dbm.get("hop") == null);
+      check(export_dbm.get("step") == null);
       check(export_dbm.count() == 0);
       export_iter.destruct();
       check(export_dbm.append("foo", "bar", ",").equals(Status.SUCCESS));

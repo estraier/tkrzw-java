@@ -319,6 +319,51 @@ static jobject CMapToJMapStr(JNIEnv* env, const std::map<std::string, std::strin
   return jmap;
 }
 
+// Extracts a list of pairs of string views from a Java string map.
+static std::vector<std::pair<std::string_view, std::string_view>> ExtractSVPairs(
+    JNIEnv* env, jobject jmap, std::vector<std::string>* placeholder) {
+  std::vector<std::pair<std::string_view, std::string_view>> result;
+  jclass cls_map = env->GetObjectClass(jmap);
+  jmethodID id_entryset = env->GetMethodID(cls_map, "entrySet", "()Ljava/util/Set;");
+  jmethodID id_size = env->GetMethodID(cls_map, "size", "()I");
+  jobject jset = env->CallObjectMethod(jmap, id_entryset);
+  jclass cls_set = env->GetObjectClass(jset);
+  jmethodID id_iterator = env->GetMethodID(cls_set, "iterator", "()Ljava/util/Iterator;");
+  jobject jiter = env->CallObjectMethod(jset, id_iterator);
+  jclass cls_iter = env->GetObjectClass(jiter);
+  jmethodID id_hasnext = env->GetMethodID(cls_iter, "hasNext", "()Z");
+  jmethodID id_next = env->GetMethodID(cls_iter, "next", "()Ljava/lang/Object;");
+  jint map_size = env->CallIntMethod(jmap, id_size);
+  result.reserve(map_size);
+  placeholder->reserve(map_size * 2);
+  while (env->CallBooleanMethod(jiter, id_hasnext)) {
+    jobject jpair = env->CallObjectMethod(jiter, id_next);
+    jclass cls_pair = env->GetObjectClass(jpair);
+    jmethodID id_getkey = env->GetMethodID(cls_pair, "getKey", "()Ljava/lang/Object;");
+    jmethodID id_getvalue = env->GetMethodID(cls_pair, "getValue", "()Ljava/lang/Object;");
+    jbyteArray jkey = (jbyteArray)env->CallObjectMethod(jpair, id_getkey);
+    jbyteArray jvalue = (jbyteArray)env->CallObjectMethod(jpair, id_getvalue);
+    {
+      SoftByteArray key(env, jkey);
+      placeholder->emplace_back(std::string(key.Get()));
+      std::string_view key_view = placeholder->back();
+      std::string_view value_view;
+      if (jvalue != nullptr) {
+        SoftByteArray value(env, jvalue);
+        placeholder->emplace_back(std::string(value.Get()));
+        value_view = placeholder->back();
+      }
+      result.emplace_back(std::make_pair(key_view, value_view));
+    }
+    env->DeleteLocalRef(jkey);
+    env->DeleteLocalRef(jvalue);
+    env->DeleteLocalRef(jpair);
+  }
+  env->DeleteLocalRef(jiter);
+  env->DeleteLocalRef(jset);
+  return result;
+}
+
 // Converts a Java string into a UCS4 vector.
 static std::vector<uint32_t> JStrToUCS4(JNIEnv* env, jstring jstr) {
   SoftString str(env, jstr);
@@ -752,6 +797,26 @@ JNIEXPORT jlong JNICALL Java_tkrzw_DBM_increment
     return current;
   }
   return tkrzw::INT64MIN;
+}
+
+// Implementation of DBM#compareExchangeMulti.
+JNIEXPORT jobject JNICALL Java_tkrzw_DBM_compareExchangeMulti
+(JNIEnv* env, jobject jself, jobject jexpected, jobject jdesired) {
+  tkrzw::ParamDBM* dbm = GetDBM(env, jself);
+  if (dbm == nullptr) {
+    ThrowIllegalArgument(env, "not opened database");
+    return nullptr;
+  }
+  if (jexpected == nullptr || jdesired == nullptr) {
+    ThrowNullPointer(env);
+    return nullptr;
+  }
+  std::vector<std::string> expected_ph;
+  const auto& expected = ExtractSVPairs(env, jexpected, &expected_ph);
+  std::vector<std::string> desired_ph;
+  const auto& desired = ExtractSVPairs(env, jdesired, &desired_ph);
+  const tkrzw::Status status = dbm->CompareExchangeMulti(expected, desired);
+  return NewStatus(env, status);
 }
 
 // Implementation of DBM#count.

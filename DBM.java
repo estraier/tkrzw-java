@@ -83,10 +83,13 @@ public class DBM {
    * <p>For HashDBM, these optional parameters are supported.
    * <ul>
    * <li>update_mode (string): How to update the database file: "UPDATE_IN_PLACE" for the
-   * in-palce and "UPDATE_APPENDING" for the appending mode.
+   * in-palce or "UPDATE_APPENDING" for the appending mode.
    * <li>offset_width (int): The width to represent the offset of records.
    * <li>align_pow (int): The power to align records.
    * <li>num_buckets (int): The number of buckets for hashing.
+   * <li>restore_mode (string): How to restore the database file: "RESTORE_SYNC" to restore to
+   * the last synchronized state or "RESTORE_NOOP" to do nothing make the database read-only.
+   * By default, as many records as possible are restored.
    * <li>fbp_capacity (int): The capacity of the free block pool.
    * <li>min_read_size (int): The minimum reading size to read a record.
    * <li>lock_mem_buckets (int): Positive to lock the memory for the hash buckets.
@@ -109,6 +112,9 @@ public class DBM {
    * <li>offset_width (int): The width to represent the offset of records.
    * <li>step_unit (int): The step unit of the skip list.
    * <li>max_level (int): The maximum level of the skip list.
+   * <li>restore_mode (string): How to restore the database file: "RESTORE_SYNC" to restore to
+   * the last synchronized state or "RESTORE_NOOP" to do nothing make the database read-only.
+   * By default, as many records as possible are restored.
    * <li>sort_mem_size (int): The memory size used for sorting to build the database in the
    * at-random mode.
    * <li>insert_in_order (bool): If true, records are assumed to be inserted in ascending
@@ -324,12 +330,12 @@ public class DBM {
     Status.AndValue<byte[]> result = setAndGet(
         key.getBytes(StandardCharsets.UTF_8), value.getBytes(StandardCharsets.UTF_8),
         overwrite);
-    Status.AndValue<String> str_result = new Status.AndValue<String>();
-    str_result.status = result.status;
+    Status.AndValue<String> strResult = new Status.AndValue<String>();
+    strResult.status = result.status;
     if (result.value != null) {
-      str_result.value = new String(result.value, StandardCharsets.UTF_8);
+      strResult.value = new String(result.value, StandardCharsets.UTF_8);
     }
-    return str_result;
+    return strResult;
   }
 
   /**
@@ -384,12 +390,12 @@ public class DBM {
    */
   public Status.AndValue<String> removeAndGet(String key) {
     Status.AndValue<byte[]> result = removeAndGet(key.getBytes(StandardCharsets.UTF_8));
-    Status.AndValue<String> str_result = new Status.AndValue<String>();
-    str_result.status = result.status;
+    Status.AndValue<String> strResult = new Status.AndValue<String>();
+    strResult.status = result.status;
     if (result.value != null) {
-      str_result.value = new String(result.value, StandardCharsets.UTF_8);
+      strResult.value = new String(result.value, StandardCharsets.UTF_8);
     }
-    return str_result;
+    return strResult;
   }
 
   /**
@@ -427,12 +433,9 @@ public class DBM {
   /**
    * Compares the value of a record and exchanges if the condition meets, with string data.
    * @param key The key of the record.
-   * @param expected The expected value.
+   * @param expected The expected value.  If it is null, no existing record is expected.
    * @param desired The desired value.  If it is null, the record is to be removed.
-   * @return The result status.
-   * @note If the record doesn't exist, NOT_FOUND_ERROR is returned.  If the existing value is
-   * different from the expected value, DUPLICATION_ERROR is returned.  Otherwise, the desired
-   * value is set.
+   * @return The result status.  If the condition doesn't meet, INFEASIBLE_ERROR is returned.
    */
   public Status compareExchange(String key, String expected, String desired) {
     return compareExchange(key.getBytes(StandardCharsets.UTF_8),
@@ -463,6 +466,44 @@ public class DBM {
    */
   public long increment(String key, long inc, long init, Status status) {
     return increment(key.getBytes(StandardCharsets.UTF_8), inc, init, status);
+  }
+
+  /**
+   * Compares the values of records and exchanges if the condition meets.
+   * @param expected The record keys and their expected values.  If the value is null, no existing
+   * record is expected.
+   * @param desired The record keys and their desired values.  If the value is null, the record
+   * is to be removed.
+   * @return The result status.  If the condition doesn't meet, INFEASIBLE_ERROR is returned.
+   */
+  public native Status compareExchangeMulti(
+      Map<byte[], byte[]> expected, Map<byte[], byte[]> desired);
+
+  /**
+   * Compares the values of records and exchanges if the condition meets, with string data.
+   * @param expected The record keys and their expected values.  If the data is null, no existing
+   * record is expected.
+   * @param desired The record keys and their desired values.  If the data is null, the record
+   * is to be removed.
+   * @return The result status.  If the condition doesn't meet, INFEASIBLE_ERROR is returned.
+   */
+  public Status compareExchangeMultiStr(
+      Map<String, String> expected, Map<String, String> desired) {
+    Map<byte[], byte[]> rawExpected = new HashMap<byte[], byte[]>();
+    for (Map.Entry<String, String> record : expected.entrySet()) {
+      byte[] rawKey = record.getKey().getBytes(StandardCharsets.UTF_8);
+      String value = record.getValue();
+      byte[] rawValue = value == null ? null : value.getBytes(StandardCharsets.UTF_8);
+      rawExpected.put(rawKey, rawValue);
+    }
+    Map<byte[], byte[]> rawDesired = new HashMap<byte[], byte[]>();
+    for (Map.Entry<String, String> record : desired.entrySet()) {
+      byte[] rawKey = record.getKey().getBytes(StandardCharsets.UTF_8);
+      String value = record.getValue();
+      byte[] rawValue = value == null ? null : value.getBytes(StandardCharsets.UTF_8);
+      rawDesired.put(rawKey, rawValue);
+    }
+    return compareExchangeMulti(rawExpected, rawDesired);
   }
 
   /**
@@ -607,11 +648,11 @@ public class DBM {
    */
   public String[] search(String mode, String pattern, int capacity, boolean utf){
     byte[][] keys = search(mode, pattern.getBytes(StandardCharsets.UTF_8), capacity, utf);
-    String[] str_keys = new String[keys.length];
+    String[] strKeys = new String[keys.length];
     for (int i = 0; i < keys.length; i++) {
-      str_keys[i] = new String(keys[i], StandardCharsets.UTF_8);
+      strKeys[i] = new String(keys[i], StandardCharsets.UTF_8);
     }
-    return str_keys;
+    return strKeys;
   }
 
   /**
