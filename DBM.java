@@ -84,6 +84,9 @@ public class DBM {
    * <ul>
    * <li>update_mode (string): How to update the database file: "UPDATE_IN_PLACE" for the
    * in-palce or "UPDATE_APPENDING" for the appending mode.
+   * <li>record_crc_mode (string): How to add the CRC data to the record: "RECORD_CRC_NONE"
+   * to add no CRC to each record, "RECORD_CRC_8" to add CRC-8 to each record, "RECORD_CRC_16"
+   * to add CRC-16 to each record, or "RECORD_CRC_32" to add CRC-32 to each record.
    * <li>offset_width (int): The width to represent the offset of records.
    * <li>align_pow (int): The power to align records.
    * <li>num_buckets (int): The number of buckets for hashing.
@@ -296,7 +299,7 @@ public class DBM {
    * @return The result status.
    */
   public Status setMultiStr(Map<String, String> records, boolean overwrite) {
-    Map<byte[], byte[]> rawRecords = new HashMap();
+    Map<byte[], byte[]> rawRecords = new HashMap<byte[], byte[]>();
     for (Map.Entry<String, String> record : records.entrySet()) {
       rawRecords.put(record.getKey().getBytes(StandardCharsets.UTF_8),
                      record.getValue().getBytes(StandardCharsets.UTF_8));

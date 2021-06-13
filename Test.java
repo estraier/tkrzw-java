@@ -214,7 +214,7 @@ public class Test {
    * Makes a string map of the given key/value pairs.
    */
   private static Map<String, String> makeStrMap(String... elems) {
-    Map map = new HashMap(elems.length);
+    Map<String, String> map = new HashMap<String, String>(elems.length);
     for (int i = 0; i < elems.length - 1; i += 2) {
       map.put(elems[i], elems[i + 1]);
     }
