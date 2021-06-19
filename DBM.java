@@ -87,6 +87,10 @@ public class DBM {
    * <li>record_crc_mode (string): How to add the CRC data to the record: "RECORD_CRC_NONE"
    * to add no CRC to each record, "RECORD_CRC_8" to add CRC-8 to each record, "RECORD_CRC_16"
    * to add CRC-16 to each record, or "RECORD_CRC_32" to add CRC-32 to each record.
+   * <li>record_comp_mode (string): How to compress the record data: "RECORD_COMP_NONE" to
+   * do no compression, "RECORD_COMP_ZLIB" to compress with ZLib, "RECORD_COMP_ZSTD" to
+   * compress with ZStd, "RECORD_COMP_LZ4" to compress with LZ4, "RECORD_COMP_LZMA" to
+   * compress with LZMA.
    * <li>offset_width (int): The width to represent the offset of records.
    * <li>align_pow (int): The power to align records.
    * <li>num_buckets (int): The number of buckets for hashing.
