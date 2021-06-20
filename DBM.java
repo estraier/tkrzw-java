@@ -95,8 +95,8 @@ public class DBM {
    * <li>align_pow (int): The power to align records.
    * <li>num_buckets (int): The number of buckets for hashing.
    * <li>restore_mode (string): How to restore the database file: "RESTORE_SYNC" to restore to
-   * the last synchronized state or "RESTORE_NOOP" to do nothing make the database read-only.
-   * By default, as many records as possible are restored.
+   * the last synchronized state, "RESTORE_READ_ONLY" to make the database read-only, or
+   * "RESTORE_NOOP" to do nothing.  By default, as many records as possible are restored.
    * <li>fbp_capacity (int): The capacity of the free block pool.
    * <li>min_read_size (int): The minimum reading size to read a record.
    * <li>lock_mem_buckets (int): Positive to lock the memory for the hash buckets.
