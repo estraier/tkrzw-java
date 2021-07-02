@@ -441,6 +441,7 @@ JNIEXPORT jobject JNICALL Java_tkrzw_DBM_open
     params = JMapStrToCMap(env, jparams);
   }
   const int32_t num_shards = tkrzw::StrToInt(tkrzw::SearchMap(params, "num_shards", "-1"));
+  params.erase("num_shards");
   int32_t open_options = 0;
   if (tkrzw::StrToBool(tkrzw::SearchMap(params, "truncate", "false"))) {
     open_options |= tkrzw::File::OPEN_TRUNCATE;
@@ -462,7 +463,6 @@ JNIEXPORT jobject JNICALL Java_tkrzw_DBM_open
     dbm = new tkrzw::ShardDBM();
   } else {
     dbm = new tkrzw::PolyDBM();
-    params.erase("num_shards");
   }
   const tkrzw::Status status = dbm->OpenAdvanced(path.Get(), writable, open_options, params);
   if (status == tkrzw::Status::SUCCESS) {
