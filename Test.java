@@ -492,6 +492,11 @@ public class Test {
         check(copy_dbm.count() == records.size());
         check(copy_dbm.close().equals(Status.SUCCESS));
         copy_dbm.destruct();
+        if (class_name.equals("HashDBM") || class_name.equals("TreeDBM")) {
+          String restored_path = copy_path + "-restored";
+          check(DBM.restoreDatabase(
+              copy_path, restored_path, class_name, -1).equals(Status.SUCCESS));
+        }
       }
       DBM export_dbm = new DBM();
       check(export_dbm.open("", true, Utility.parseParams("dbm=BabyDBM")).equals(Status.SUCCESS));

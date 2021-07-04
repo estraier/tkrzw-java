@@ -673,6 +673,20 @@ public class DBM {
    */
   public native String toString();
 
+  /**
+   * Restores a broken database as a new healthy database.
+   * @param old_file_path The path of the broken database.
+   * @param new_file_path The path of the new database to be created.
+   * @param class_name The name of the database class.  If it is null or empty, the class is
+   * guessed from the file extension.
+   * @param end_offset The exclusive end offset of records to read.  Negative means unlimited.
+   * 0 means the size when the database is synched or closed properly.  Using a positive value
+   * is not meaningful if the number of shards is more than one.
+   * @return The result status.
+   */
+  public static native Status restoreDatabase(
+      String old_file_path, String new_file_path, String class_name, long end_offset);
+
   /** The pointer to the native object */
   private long ptr_ = 0;
 }

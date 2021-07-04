@@ -441,7 +441,6 @@ JNIEXPORT jobject JNICALL Java_tkrzw_DBM_open
     params = JMapStrToCMap(env, jparams);
   }
   const int32_t num_shards = tkrzw::StrToInt(tkrzw::SearchMap(params, "num_shards", "-1"));
-  params.erase("num_shards");
   int32_t open_options = 0;
   if (tkrzw::StrToBool(tkrzw::SearchMap(params, "truncate", "false"))) {
     open_options |= tkrzw::File::OPEN_TRUNCATE;
@@ -1084,6 +1083,26 @@ JNIEXPORT jstring JNICALL Java_tkrzw_DBM_toString
   }
   expr += ")";
   return NewString(env, expr.c_str());
+}
+
+// Implementation of DBM#restoreDatabase.
+JNIEXPORT jobject JNICALL Java_tkrzw_DBM_restoreDatabase
+(JNIEnv* env, jclass jcls, jstring jold_file_path, jstring jnew_file_path,
+ jstring jclass_name, jlong end_offset) {
+  SoftString old_file_path(env, jold_file_path);
+  SoftString new_file_path(env, jnew_file_path);
+  SoftString class_name(env, jclass_name);
+  tkrzw::Status status(tkrzw::Status::SUCCESS);
+  int32_t num_shards = 0;
+  if (tkrzw::ShardDBM::GetNumberOfShards(old_file_path.Get(), &num_shards) ==
+      tkrzw::Status::SUCCESS) {
+    status = tkrzw::ShardDBM::RestoreDatabase(
+        old_file_path.Get(), new_file_path.Get(), class_name.Get(), end_offset);
+  } else {
+    status = tkrzw::PolyDBM::RestoreDatabase(
+        old_file_path.Get(), new_file_path.Get(), class_name.Get(), end_offset);
+  }
+  return NewStatus(env, status);
 }
 
 // Implementation of Iterator#initialize.
