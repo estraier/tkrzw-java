@@ -109,6 +109,16 @@ static void SetStatus(JNIEnv* env, const tkrzw::Status& status, jobject jstatus)
   env->DeleteLocalRef(jcode);
 }
 
+// Throws the status exception.
+static void ThrowStatus(JNIEnv* env, const tkrzw::Status& status) {
+  jobject jstatus = NewStatus(env, status);
+  jclass cls_status_ex = env->FindClass("tkrzw/StatusException");
+  jmethodID id_init = env->GetMethodID(cls_status_ex, "<init>", "(Ltkrzw/Status;)V");
+  jthrowable jstatus_ex = (jthrowable)env->NewObject(cls_status_ex, id_init, jstatus);
+  env->DeleteLocalRef(jstatus);
+  env->Throw(jstatus_ex);
+}
+
 // Wrapper to treat a Java string as a C++ string.
 class SoftString {
  public:
@@ -1029,19 +1039,10 @@ JNIEXPORT jobjectArray JNICALL Java_tkrzw_DBM_search
   SoftString mode(env, jmode);
   SoftByteArray pattern(env, jpattern);
   std::vector<std::string> keys;
-  tkrzw::Status status(tkrzw::Status::SUCCESS);
-  if (std::strcmp(mode.Get(), "contain") == 0) {
-    status = tkrzw::SearchDBM(dbm, pattern.Get(), &keys, capacity, tkrzw::StrContains);
-  } else if (std::strcmp(mode.Get(), "begin") == 0) {
-    status = tkrzw::SearchDBMForwardMatch(dbm, pattern.Get(), &keys, capacity);
-  } else if (std::strcmp(mode.Get(), "end") == 0) {
-    status = tkrzw::SearchDBM(dbm, pattern.Get(), &keys, capacity, tkrzw::StrEndsWith);
-  } else if (std::strcmp(mode.Get(), "regex") == 0) {
-    status = tkrzw::SearchDBMRegex(dbm, pattern.Get(), &keys, capacity, utf);
-  } else if (std::strcmp(mode.Get(), "edit") == 0) {
-    status = tkrzw::SearchDBMEditDistance(dbm, pattern.Get(), &keys, capacity, utf);
-  } else {
-    ThrowIllegalArgument(env, "unknown mode");
+  const tkrzw::Status status =
+      SearchDBMModal(dbm, mode.Get(), pattern.Get(), &keys, capacity, utf);
+  if (status != tkrzw::Status::SUCCESS) {
+    ThrowStatus(env, status);
     return nullptr;
   }
   jclass cls_byteary = env->FindClass("[B");
@@ -1376,30 +1377,21 @@ JNIEXPORT jobjectArray JNICALL Java_tkrzw_TextFile_search
   }
   SoftString mode(env, jmode);
   SoftString pattern(env, jpattern);
-  std::vector<std::string> keys;
-  tkrzw::Status status(tkrzw::Status::SUCCESS);
-  if (std::strcmp(mode.Get(), "contain") == 0) {
-    status = tkrzw::SearchTextFile(file, pattern.Get(), &keys, capacity, tkrzw::StrContains);
-  } else if (std::strcmp(mode.Get(), "begin") == 0) {
-    status = tkrzw::SearchTextFile(file, pattern.Get(), &keys, capacity, tkrzw::StrBeginsWith);
-  } else if (std::strcmp(mode.Get(), "end") == 0) {
-    status = tkrzw::SearchTextFile(file, pattern.Get(), &keys, capacity, tkrzw::StrEndsWith);
-  } else if (std::strcmp(mode.Get(), "regex") == 0) {
-    status = tkrzw::SearchTextFileRegex(file, pattern.Get(), &keys, capacity, utf);
-  } else if (std::strcmp(mode.Get(), "edit") == 0) {
-    status = tkrzw::SearchTextFileEditDistance(file, pattern.Get(), &keys, capacity, utf);
-  } else {
-    ThrowIllegalArgument(env, "unknown mode");
+  std::vector<std::string> lines;
+  const tkrzw::Status status =
+      SearchTextFileModal(file, mode.Get(), pattern.Get(), &lines, capacity, utf);
+  if (status != tkrzw::Status::SUCCESS) {
+    ThrowStatus(env, status);
     return nullptr;
   }
   jclass cls_byteary = env->FindClass("[B");
-  jobjectArray jkeys = env->NewObjectArray(keys.size(), cls_byteary, nullptr);
-  for (size_t i = 0; i < keys.size(); i++) {
-    jbyteArray jkey = NewByteArray(env, keys[i]);
-    env->SetObjectArrayElement(jkeys, i, jkey);
-    env->DeleteLocalRef(jkey);
+  jobjectArray jlines = env->NewObjectArray(lines.size(), cls_byteary, nullptr);
+  for (size_t i = 0; i < lines.size(); i++) {
+    jbyteArray jline = NewByteArray(env, lines[i]);
+    env->SetObjectArrayElement(jlines, i, jline);
+    env->DeleteLocalRef(jline);
   }
-  return jkeys;
+  return jlines;
 }
 
 // Implementation of TextFile#toString.

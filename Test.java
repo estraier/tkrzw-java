@@ -866,6 +866,12 @@ public class Test {
       check(dbm.search("regex", "^\\d+1$", 0, false).length == 10);
       check(dbm.search("edit", "00000100", 3, true).length == 3);
       check(dbm.search("edit", "00000100", 3, false).length == 3);
+      try {
+        dbm.search("foo", "00000100", 3, false);
+        check(false);
+      } catch (StatusException e) {
+        check(e.getStatus().equals(Status.Code.INVALID_ARGUMENT_ERROR));
+      }
       check(dbm.close().equals(Status.Code.SUCCESS));
       dbm.destruct();
     }
@@ -900,6 +906,12 @@ public class Test {
     check(textfile.search("regex", "^\\d+1$", 0, false).length == 10);
     check(textfile.search("edit", "00000100", 3, true).length == 3);
     check(textfile.search("edit", "00000100", 3, false).length == 3);
+    try {
+      textfile.search("foo", "00000100", 3, false);
+      check(false);
+    } catch (StatusException e) {
+      check(e.getStatus().equals(Status.Code.INVALID_ARGUMENT_ERROR));
+    }
     check(textfile.close().equals(Status.Code.SUCCESS));
     textfile.destruct();
     STDOUT.printf("  ... OK\n");
