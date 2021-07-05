@@ -227,6 +227,7 @@ public class Test {
   private static int runUtility() {
     STDOUT.printf("Running utility tests:\n");
     check(Utility.VERSION.length() >= 3);
+    check(Utility.getMemoryCapacity() > 0);
     check(Utility.getMemoryUsage() > 0);
     Map params = Utility.parseParams("key1=value1,key2=value2,foo,");
     check(params.size() == 2);

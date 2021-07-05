@@ -59,8 +59,14 @@ public class Utility {
   }
 
   /**
+   * Gets the memory capacity of the platform.
+   * @return The memory capacity of the platform in bytes, or -1 on failure.
+   */
+  public static native long getMemoryCapacity();
+
+  /**
    * Gets the current memory usage of the process.
-   * @return The current memory usage of the process.
+   * @return The current memory usage of the process in bytes, or -1 on failure.
    */
   public static native long getMemoryUsage();
 

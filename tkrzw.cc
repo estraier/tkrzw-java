@@ -386,11 +386,16 @@ JNIEXPORT jstring JNICALL Java_tkrzw_Utility_getVersion
   return NewString(env, tkrzw::PACKAGE_VERSION);
 }
 
+// Implementation of Utility.getMemoryCapacity.
+JNIEXPORT jlong JNICALL Java_tkrzw_Utility_getMemoryCapacity
+(JNIEnv* env, jclass jcls) {
+  return tkrzw::GetMemoryCapacity();
+}
+
 // Implementation of Utility.getMemoryUsage.
 JNIEXPORT jlong JNICALL Java_tkrzw_Utility_getMemoryUsage
 (JNIEnv* env, jclass jcls) {
-  const std::map<std::string, std::string> records = tkrzw::GetSystemInfo();
-  return tkrzw::StrToInt(tkrzw::SearchMap(records, "mem_rss", "-1"));
+  return tkrzw::GetMemoryUsage();
 }
 
 // Implementation of Utility#primaryHash.
