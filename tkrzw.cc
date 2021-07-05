@@ -386,6 +386,12 @@ JNIEXPORT jstring JNICALL Java_tkrzw_Utility_getVersion
   return NewString(env, tkrzw::PACKAGE_VERSION);
 }
 
+// Implementation of Utility.getOSName.
+JNIEXPORT jstring JNICALL Java_tkrzw_Utility_getOSName
+(JNIEnv* env, jclass jcls) {
+  return NewString(env, tkrzw::OS_NAME);
+}
+
 // Implementation of Utility.getMemoryCapacity.
 JNIEXPORT jlong JNICALL Java_tkrzw_Utility_getMemoryCapacity
 (JNIEnv* env, jclass jcls) {

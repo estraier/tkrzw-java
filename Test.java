@@ -227,8 +227,11 @@ public class Test {
   private static int runUtility() {
     STDOUT.printf("Running utility tests:\n");
     check(Utility.VERSION.length() >= 3);
-    check(Utility.getMemoryCapacity() > 0);
-    check(Utility.getMemoryUsage() > 0);
+    check(Utility.OS_NAME.length() > 0);
+    if (Utility.OS_NAME.equals("Linux")) {
+      check(Utility.getMemoryCapacity() > 0);
+      check(Utility.getMemoryUsage() > 0);
+    }
     Map params = Utility.parseParams("key1=value1,key2=value2,foo,");
     check(params.size() == 2);
     check(params.get("key1").equals("value1"));

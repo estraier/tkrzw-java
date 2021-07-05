@@ -26,6 +26,8 @@ public class Utility {
 
   /** The package version numbers. */
   static final String VERSION = getVersion();
+  /** The recognized OS name. */
+  static final String OS_NAME = getOSName();
 
   /**
    * Load the native library.
@@ -40,6 +42,11 @@ public class Utility {
    * Gets the package version numbers.
    */
   private static native String getVersion();
+
+  /**
+   * Gets the recognized OS name.
+   */
+  private static native String getOSName();
 
   /**
    * Parses a string of parameters in "key=value,key=value" format.
