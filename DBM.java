@@ -601,6 +601,8 @@ public class DBM {
    * Exports the keys of all records as lines to a text file.
    * @param dest_path A path of the output text file.
    * @return The result status.
+   * @note As the exported text file is smaller than the database file, scanning the text file
+   * by the search method is often faster than scanning the whole database.
    */
   public native Status exportKeysAsLines(String dest_path);
 

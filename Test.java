@@ -13,7 +13,6 @@
 
 package tkrzw;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Files;
@@ -176,7 +175,7 @@ public class Test {
   private static void removeDirectory(String path) {
     try {
       Files.walk(Paths.get(path)).sorted(Comparator.reverseOrder())
-          .map(Path::toFile).forEach(File::delete);
+          .map(Path::toFile).forEach(java.io.File::delete);
     } catch(IOException e) {
       throw new RuntimeException(e);
     }
@@ -350,7 +349,7 @@ public class Test {
     for (Map<String, String> conf : confs) {
       String path = conf.get("path");
       if (!path.isEmpty()) {
-        path = tmp_dir_path + File.separatorChar + path;
+        path = tmp_dir_path + java.io.File.separatorChar + path;
       }
       Map<String, String> open_params = Utility.parseParams(conf.get("open_params"));
       Map<String, String> rebuild_params = Utility.parseParams(conf.get("rebuild_params"));
@@ -618,7 +617,7 @@ public class Test {
     for (Map<String, String> conf : confs) {
       String path = conf.get("path");
       if (!path.isEmpty()) {
-        path = tmp_dir_path + File.separatorChar + path;
+        path = tmp_dir_path + java.io.File.separatorChar + path;
       }
       Map<String, String> open_params = Utility.parseParams(conf.get("open_params"));
       DBM dbm = new DBM();
@@ -737,7 +736,7 @@ public class Test {
    */
   private static int runThread(String tmp_dir_path) {
     STDOUT.printf("Running thread tests:\n");
-    String path = tmp_dir_path + File.separatorChar + "casket.tkh";
+    String path = tmp_dir_path + java.io.File.separatorChar + "casket.tkh";
     DBM dbm = new DBM();
     check(dbm.open(path, true, Utility.parseParams("num_buckets=1000")).equals(Status.SUCCESS));
     int num_records = 5000;
@@ -849,7 +848,7 @@ public class Test {
     for (Map<String, String> conf : confs) {
       String path = conf.get("path");
       if (!path.isEmpty()) {
-        path = tmp_dir_path + File.separatorChar + path;
+        path = tmp_dir_path + java.io.File.separatorChar + path;
       }
       Map<String, String> open_params = Utility.parseParams(conf.get("open_params"));
       DBM dbm = new DBM();
@@ -888,8 +887,8 @@ public class Test {
    */
   private static int runText(String tmp_dir_path) {
     STDOUT.printf("Running text tests:\n");
-    String path = tmp_dir_path + File.separatorChar + "casket.tkh";
-    String dest_path = tmp_dir_path + File.separatorChar + "casket.txt";
+    String path = tmp_dir_path + java.io.File.separatorChar + "casket.tkh";
+    String dest_path = tmp_dir_path + java.io.File.separatorChar + "casket.txt";
     DBM dbm = new DBM();
     check(dbm.open(path, true).equals(Status.SUCCESS));
     for (int i = 1; i <= 100; i++) {
@@ -900,9 +899,9 @@ public class Test {
     check(dbm.exportKeysAsLines(dest_path).equals(Status.Code.SUCCESS));
     check(dbm.close().equals(Status.Code.SUCCESS));
     dbm.destruct();
-    TextFile textfile = new TextFile();
+    File textfile = new File();
     check(textfile.open(dest_path).equals(Status.SUCCESS));
-    check(textfile.toString().indexOf("TextFile") >= 0);
+    check(textfile.toString().indexOf("File") >= 0);
     check(textfile.search("contain", "001", 0, false).length == 12);
     check(textfile.search("contain", "001", 3, false).length == 3);
     check(textfile.search("begin", "0000001", 0, false).length == 10);

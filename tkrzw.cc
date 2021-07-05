@@ -36,7 +36,7 @@
 
 #include "tkrzw_DBM.h"
 #include "tkrzw_Iterator.h"
-#include "tkrzw_TextFile.h"
+#include "tkrzw_File.h"
 #include "tkrzw_Utility.h"
 
 // Throws the out-of-memory error.
@@ -1334,15 +1334,15 @@ JNIEXPORT jstring JNICALL Java_tkrzw_Iterator_toString
   return NewString(env, expr.c_str());
 }
 
-// Implementation of TextFile#initialize.
-JNIEXPORT void JNICALL Java_tkrzw_TextFile_initialize
+// Implementation of File#initialize.
+JNIEXPORT void JNICALL Java_tkrzw_File_initialize
 (JNIEnv* env, jobject jself){
   tkrzw::File* file = new tkrzw::MemoryMapParallelFile;
   SetFile(env, jself, file);
 }
 
-// Implementation of TextFile#destruct.
-JNIEXPORT void JNICALL Java_tkrzw_TextFile_destruct
+// Implementation of File#destruct.
+JNIEXPORT void JNICALL Java_tkrzw_File_destruct
 (JNIEnv* env, jobject jself) {
   tkrzw::File* file = GetFile(env, jself);
   if (file == nullptr) {
@@ -1353,8 +1353,8 @@ JNIEXPORT void JNICALL Java_tkrzw_TextFile_destruct
   SetFile(env, jself, nullptr);
 }
 
-// Implementation of TextFile#open.
-JNIEXPORT jobject JNICALL Java_tkrzw_TextFile_open
+// Implementation of File#open.
+JNIEXPORT jobject JNICALL Java_tkrzw_File_open
 (JNIEnv* env, jobject jself, jstring jpath) {
   tkrzw::File* file = GetFile(env, jself);
   if (file == nullptr || jpath == nullptr) {
@@ -1366,8 +1366,8 @@ JNIEXPORT jobject JNICALL Java_tkrzw_TextFile_open
   return NewStatus(env, status);
 }
 
-// Implementation of TextFile#close.
-JNIEXPORT jobject JNICALL Java_tkrzw_TextFile_close
+// Implementation of File#close.
+JNIEXPORT jobject JNICALL Java_tkrzw_File_close
 (JNIEnv* env, jobject jself) {
   tkrzw::File* file = GetFile(env, jself);
   if (file == nullptr) {
@@ -1378,8 +1378,8 @@ JNIEXPORT jobject JNICALL Java_tkrzw_TextFile_close
   return NewStatus(env, status);
 }
 
-// Implementation of TextFile#search.
-JNIEXPORT jobjectArray JNICALL Java_tkrzw_TextFile_search
+// Implementation of File#search.
+JNIEXPORT jobjectArray JNICALL Java_tkrzw_File_search
 (JNIEnv* env, jobject jself, jstring jmode, jstring jpattern, jint capacity, jboolean utf) {
   tkrzw::File* file = GetFile(env, jself);
   if (file == nullptr || jmode == nullptr || jpattern == nullptr) {
@@ -1405,10 +1405,10 @@ JNIEXPORT jobjectArray JNICALL Java_tkrzw_TextFile_search
   return jlines;
 }
 
-// Implementation of TextFile#toString.
-JNIEXPORT jstring JNICALL Java_tkrzw_TextFile_toString
+// Implementation of File#toString.
+JNIEXPORT jstring JNICALL Java_tkrzw_File_toString
 (JNIEnv* env, jobject jself) {
-  return NewString(env, "tkrzw.TextFile");
+  return NewString(env, "tkrzw.File");
 }
 
 // END OF FILE

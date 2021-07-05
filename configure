@@ -2100,8 +2100,8 @@ MYLIBREV=9
 
 # Targets
 MYJARFILES="tkrzw.jar"
-MYJAVAFILES="Utility.java Status.java StatusException.java DBM.java Iterator.java TextFile.java Test.java"
-MYHEADERFILES=" tkrzw_Utility.h tkrzw_DBM.h tkrzw_Iterator.h tkrzw_TextFile.h"
+MYJAVAFILES="Utility.java Status.java StatusException.java DBM.java Iterator.java File.java Test.java"
+MYHEADERFILES=" tkrzw_Utility.h tkrzw_DBM.h tkrzw_Iterator.h tkrzw_File.h"
 MYLIBRARYFILES=""
 MYLIBOBJFILES="tkrzw.o"
 
