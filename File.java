@@ -180,27 +180,28 @@ public class File {
    * Appends data at the end of the file.
    * @param buf The source buffer.
    * @param size The size to be written.
-   * @return The result status.
+   * @param status The status object to store the result status.  If it is null, it is ignored.
+   * @return The offset at which the data has been put, or -1 on failure.
    */
-  public native Status append(byte[] buf, long size);
+  public native long append(byte[] buf, long size, Status status);
 
   /**
    * Appends data at the end of the file.
    * @param buf The source buffer.  The written size is the size of the buffer.
-   * @return The result status.
+   * @return The offset at which the data has been put, or -1 on failure.
    */
-  public Status append(byte[] buf) {
-    return append(buf, buf.length);
+  public long append(byte[] buf) {
+    return append(buf, buf.length, null);
   }
 
   /**
    * Appends data at the end of the file.
    * @param str The source string.
-   * @return The result status.
+   * @return The offset at which the data has been put, or -1 on failure.
    */
-  public Status append(String str) {
+  public long append(String str) {
     byte[] buf = str.getBytes(StandardCharsets.UTF_8);
-    return append(buf, buf.length);
+    return append(buf);
   }
 
   /**
@@ -240,7 +241,7 @@ public class File {
    * Gets the size of the file.
    * @return The size of the file or -1 on failure.
    */
-  public native long size();
+  public native long getSize();
 
   /**
    * Searches the file and get lines which match a pattern.

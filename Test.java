@@ -940,12 +940,12 @@ public class Test {
     check(file.open(path, true, params).equals(Status.SUCCESS));
     check(file.write(5, "12345").equals(Status.SUCCESS));
     check(file.write(0, "ABCDE").equals(Status.SUCCESS));
-    check(file.append("FGH").equals(Status.SUCCESS));
-    check(file.append("IJ").equals(Status.SUCCESS));
-    check(file.size() == 15);
+    check(file.append("FGH") == 10);
+    check(file.append("IJ") == 13);
+    check(file.getSize() == 15);
     check(file.truncate(12).equals(Status.SUCCESS));
     check(file.synchronize(false).equals(Status.SUCCESS));
-    check(file.size() == 12);
+    check(file.getSize() == 12);
     String str = file.readString(0, 12);
     check(str.equals("ABCDE12345FG"));
     str = file.readString(3, 5);
@@ -955,7 +955,7 @@ public class Test {
     check(status.equals(Status.INFEASIBLE_ERROR));
     check(file.close().equals(Status.SUCCESS));
     check(file.open(path, false).equals(Status.SUCCESS));
-    check(file.size() == 512);
+    check(file.getSize() == 512);
     str = file.readString(4, 7);
     check(str.equals("E12345F"));
     check(file.close().equals(Status.SUCCESS));

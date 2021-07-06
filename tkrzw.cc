@@ -1456,32 +1456,39 @@ JNIEXPORT jobject JNICALL Java_tkrzw_File_write
 }
 
 // Implementation of File#append.
-JNIEXPORT jobject JNICALL Java_tkrzw_File_append
-(JNIEnv* env, jobject jself, jbyteArray jbuf, jlong size) {
+JNIEXPORT jlong JNICALL Java_tkrzw_File_append
+(JNIEnv* env, jobject jself, jbyteArray jbuf, jlong size, jobject jstatus) {
   tkrzw::PolyFile* file = GetFile(env, jself);
   if (file == nullptr) {
     ThrowNullPointer(env);
-    return nullptr;
+    return -1;
   }
   if (jbuf == nullptr) {
     ThrowNullPointer(env);
-    return nullptr;
+    return -1;
   }
   if (size < 0 || size > env->GetArrayLength(jbuf)) {
     ThrowIllegalArgument(env, "invalid size");
-    return nullptr;
+    return -1;
   }
   jboolean copied = false;
   jbyte* buf_ptr = env->GetByteArrayElements(jbuf, &copied);
   if (buf_ptr == nullptr) {
     ThrowOutOfMemory(env);
-    return nullptr;
+    return -1;
   }
-  const tkrzw::Status status = file->Append((char*)buf_ptr, size);
+  int64_t off = 0;
+  const tkrzw::Status status = file->Append((char*)buf_ptr, size, &off);
   if (copied) {
     env->ReleaseByteArrayElements(jbuf, buf_ptr, JNI_ABORT);
   }
-  return NewStatus(env, status);
+  if (jstatus != nullptr) {
+    SetStatus(env, status, jstatus);
+  }
+  if (status != tkrzw::Status::SUCCESS) {
+    off = -1;
+  }
+  return off;
 }
 
 // Implementation of File#truncate.
@@ -1508,7 +1515,7 @@ JNIEXPORT jobject JNICALL Java_tkrzw_File_synchronize
 }
 
 // Implementation of File#size.
-JNIEXPORT jlong JNICALL Java_tkrzw_File_size
+JNIEXPORT jlong JNICALL Java_tkrzw_File_getSize
 (JNIEnv* env, jobject jself) {
   tkrzw::PolyFile* file = GetFile(env, jself);
   if (file == nullptr) {
