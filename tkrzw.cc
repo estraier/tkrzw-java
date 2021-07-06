@@ -28,7 +28,7 @@
 #include "tkrzw_dbm_poly.h"
 #include "tkrzw_dbm_shard.h"
 #include "tkrzw_file.h"
-#include "tkrzw_file_mmap.h"
+#include "tkrzw_file_poly.h"
 #include "tkrzw_file_util.h"
 #include "tkrzw_key_comparators.h"
 #include "tkrzw_lib_common.h"
@@ -216,14 +216,14 @@ static void SetIter(JNIEnv* env, jobject jiter, tkrzw::DBM::Iterator* iter) {
 }
 
 // Gets the file pointer of the Java text file object.
-static tkrzw::File* GetFile(JNIEnv* env, jobject jfile) {
+static tkrzw::PolyFile* GetFile(JNIEnv* env, jobject jfile) {
   jclass cls_file = env->GetObjectClass(jfile);
   jfieldID id_file_ptr = env->GetFieldID(cls_file, "ptr_", "J");
-  return (tkrzw::File*)(intptr_t)env->GetLongField(jfile, id_file_ptr);
+  return (tkrzw::PolyFile*)(intptr_t)env->GetLongField(jfile, id_file_ptr);
 }
 
 // Sets the file pointer of the Java text file object.
-static void SetFile(JNIEnv* env, jobject jfile, tkrzw::File* file) {
+static void SetFile(JNIEnv* env, jobject jfile, tkrzw::PolyFile* file) {
   jclass cls_file = env->GetObjectClass(jfile);
   jfieldID id_file_ptr = env->GetFieldID(cls_file, "ptr_", "J");
   env->SetLongField(jfile, id_file_ptr, (intptr_t)file);
@@ -1337,14 +1337,14 @@ JNIEXPORT jstring JNICALL Java_tkrzw_Iterator_toString
 // Implementation of File#initialize.
 JNIEXPORT void JNICALL Java_tkrzw_File_initialize
 (JNIEnv* env, jobject jself){
-  tkrzw::File* file = new tkrzw::MemoryMapParallelFile;
+  tkrzw::PolyFile* file = new tkrzw::PolyFile;
   SetFile(env, jself, file);
 }
 
 // Implementation of File#destruct.
 JNIEXPORT void JNICALL Java_tkrzw_File_destruct
 (JNIEnv* env, jobject jself) {
-  tkrzw::File* file = GetFile(env, jself);
+  tkrzw::PolyFile* file = GetFile(env, jself);
   if (file == nullptr) {
     ThrowNullPointer(env);
     return;
@@ -1355,21 +1355,39 @@ JNIEXPORT void JNICALL Java_tkrzw_File_destruct
 
 // Implementation of File#open.
 JNIEXPORT jobject JNICALL Java_tkrzw_File_open
-(JNIEnv* env, jobject jself, jstring jpath) {
-  tkrzw::File* file = GetFile(env, jself);
+(JNIEnv* env, jobject jself, jstring jpath, jboolean writable, jobject jparams) {
+  tkrzw::PolyFile* file = GetFile(env, jself);
   if (file == nullptr || jpath == nullptr) {
     ThrowNullPointer(env);
     return nullptr;
   }
   SoftString path(env, jpath);
-  const tkrzw::Status status = file->Open(std::string(path.Get()), false);
+  std::map<std::string, std::string> params;
+  if (jparams != nullptr) {
+    params = JMapStrToCMap(env, jparams);
+  }
+  int32_t open_options = 0;
+  if (tkrzw::StrToBool(tkrzw::SearchMap(params, "truncate", "false"))) {
+    open_options |= tkrzw::File::OPEN_TRUNCATE;
+  }
+  if (tkrzw::StrToBool(tkrzw::SearchMap(params, "no_create", "false"))) {
+    open_options |= tkrzw::File::OPEN_NO_CREATE;
+  }
+  if (tkrzw::StrToBool(tkrzw::SearchMap(params, "no_wait", "false"))) {
+    open_options |= tkrzw::File::OPEN_NO_WAIT;
+  }
+  if (tkrzw::StrToBool(tkrzw::SearchMap(params, "no_lock", "false"))) {
+    open_options |= tkrzw::File::OPEN_NO_LOCK;
+  }
+  const tkrzw::Status status = file->OpenAdvanced(
+      std::string(path.Get()), writable, open_options, params);
   return NewStatus(env, status);
 }
 
 // Implementation of File#close.
 JNIEXPORT jobject JNICALL Java_tkrzw_File_close
 (JNIEnv* env, jobject jself) {
-  tkrzw::File* file = GetFile(env, jself);
+  tkrzw::PolyFile* file = GetFile(env, jself);
   if (file == nullptr) {
     ThrowNullPointer(env);
     return nullptr;
@@ -1381,7 +1399,7 @@ JNIEXPORT jobject JNICALL Java_tkrzw_File_close
 // Implementation of File#search.
 JNIEXPORT jobjectArray JNICALL Java_tkrzw_File_search
 (JNIEnv* env, jobject jself, jstring jmode, jstring jpattern, jint capacity, jboolean utf) {
-  tkrzw::File* file = GetFile(env, jself);
+  tkrzw::PolyFile* file = GetFile(env, jself);
   if (file == nullptr || jmode == nullptr || jpattern == nullptr) {
     ThrowNullPointer(env);
     return nullptr;

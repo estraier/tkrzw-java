@@ -899,24 +899,24 @@ public class Test {
     check(dbm.exportKeysAsLines(dest_path).equals(Status.Code.SUCCESS));
     check(dbm.close().equals(Status.Code.SUCCESS));
     dbm.destruct();
-    File textfile = new File();
-    check(textfile.open(dest_path).equals(Status.SUCCESS));
-    check(textfile.toString().indexOf("File") >= 0);
-    check(textfile.search("contain", "001", 0, false).length == 12);
-    check(textfile.search("contain", "001", 3, false).length == 3);
-    check(textfile.search("begin", "0000001", 0, false).length == 10);
-    check(textfile.search("end", "1", 0, false).length == 10);
-    check(textfile.search("regex", "^\\d+1$", 0, false).length == 10);
-    check(textfile.search("edit", "00000100", 3, true).length == 3);
-    check(textfile.search("edit", "00000100", 3, false).length == 3);
+    File file = new File();
+    check(file.open(dest_path, false).equals(Status.SUCCESS));
+    check(file.toString().indexOf("File") >= 0);
+    check(file.search("contain", "001", 0, false).length == 12);
+    check(file.search("contain", "001", 3, false).length == 3);
+    check(file.search("begin", "0000001", 0, false).length == 10);
+    check(file.search("end", "1", 0, false).length == 10);
+    check(file.search("regex", "^\\d+1$", 0, false).length == 10);
+    check(file.search("edit", "00000100", 3, true).length == 3);
+    check(file.search("edit", "00000100", 3, false).length == 3);
     try {
-      textfile.search("foo", "00000100", 3, false);
+      file.search("foo", "00000100", 3, false);
       check(false);
     } catch (StatusException e) {
       check(e.getStatus().equals(Status.Code.INVALID_ARGUMENT_ERROR));
     }
-    check(textfile.close().equals(Status.Code.SUCCESS));
-    textfile.destruct();
+    check(file.close().equals(Status.Code.SUCCESS));
+    file.destruct();
     STDOUT.printf("  ... OK\n");
     return 0;
   }
