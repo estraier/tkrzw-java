@@ -936,7 +936,7 @@ public class Test {
     String path = tmp_dir_path + java.io.File.separatorChar + "casket.txt";
     File file = new File();
     Map params = Utility.parseParams(
-        "truncate=true,file=pos-atom,block_size=512,access_options=padding,pagecache");
+        "truncate=true,file=pos-atom,block_size=512,access_options=padding:pagecache");
     check(file.open(path, true, params).equals(Status.SUCCESS));
     check(file.write(5, "12345").equals(Status.SUCCESS));
     check(file.write(0, "ABCDE").equals(Status.SUCCESS));
