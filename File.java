@@ -18,6 +18,11 @@ import java.util.Map;
 
 /**
  * Generic file implementation.
+ * @note All operations except for "open" and "close" are thread-safe; Multiple threads can
+ * access the same file concurrently.  You can specify a concrete class when you call the
+ * "open" method.  Every opened file must be closed explicitly by the "close" method to avoid
+ * data corruption.  Moreover, every unused file object should be destructed by the "destruct"
+ * method to free resources.
  */
 public class File {
   static {
