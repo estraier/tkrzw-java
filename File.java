@@ -86,6 +86,163 @@ public class File {
   public native Status close();
 
   /**
+   * Reads data.
+   * @param off The offset of a source region.
+   * @param buf The destination buffer.
+   * @param size The size to be read.
+   * @return The result status.
+   */
+  public native Status read(long off, byte[] buf, long size);
+
+  /**
+   * Reads data.
+   * @param off The offset of a source region.
+   * @param size The size to be read.
+   * @param status The status object to store the result status.  If it is null, it is ignored.
+   * @return A byte array containing read data.
+   */
+  public byte[] read(long off, long size, Status status) {
+    byte[] buf = new byte[(int)size];
+    Status tmp_status = read(off, buf, buf.length);
+    if (status != null) {
+      status.set(tmp_status.getCode(), tmp_status.getMessage());
+    }
+    return tmp_status.isOK() ? buf : null;
+  }
+
+  /**
+   * Reads data and returns a byte array.
+   * @param off The offset of a source region.
+   * @param size The size to be read.
+   * @return A byte array containing read data.
+   */
+  public byte[] read(long off, long size) {
+    return read(off, size, null);
+  }
+
+  /**
+   * Reads data and returns a byte array.
+   * @param off The offset of a source region.
+   * @param size The size to be read.
+   * @param status The status object to store the result status.  If it is null, it is ignored.
+   * @return A string containing read data.
+   */
+  public String readString(long off, long size, Status status) {
+    byte[] buf = new byte[(int)size];
+    Status tmp_status = read(off, buf, buf.length);
+    if (status != null) {
+      status.set(tmp_status.getCode(), tmp_status.getMessage());
+    }
+    return new String(buf, StandardCharsets.UTF_8);
+  }
+
+  /**
+   * Reads data and returns a byte array.
+   * @param off The offset of a source region.
+   * @param size The size to be read.
+   * @return A string containing read data.
+   */
+  public String readString(long off, long size) {
+    return readString(off, size, null);
+  }
+
+  /**
+   * Writes data.
+   * @param off The offset of the destination region.
+   * @param buf The source buffer.
+   * @param size The size to be written.
+   * @return The result status.
+   */
+  public native Status write(long off, byte[] buf, long size);
+
+  /**
+   * Writes data.
+   * @param off The offset of the destination region.
+   * @param buf The source buffer.  The written size is the size of the buffer.
+   * @return The result status.
+   */
+  public Status write(long off, byte[] buf) {
+    return write(off, buf, buf.length);
+  }
+
+  /**
+   * Writes a string.
+   * @param off The offset of the destination region.
+   * @param str The source string.
+   * @return The result status.
+   */
+  public Status write(long off, String str) {
+    byte[] buf = str.getBytes(StandardCharsets.UTF_8);
+    return write(off, buf, buf.length);
+  }
+
+  /**
+   * Appends data at the end of the file.
+   * @param buf The source buffer.
+   * @param size The size to be written.
+   * @return The result status.
+   */
+  public native Status append(byte[] buf, long size);
+
+  /**
+   * Appends data at the end of the file.
+   * @param buf The source buffer.  The written size is the size of the buffer.
+   * @return The result status.
+   */
+  public Status append(byte[] buf) {
+    return append(buf, buf.length);
+  }
+
+  /**
+   * Appends data at the end of the file.
+   * @param str The source string.
+   * @return The result status.
+   */
+  public Status append(String str) {
+    byte[] buf = str.getBytes(StandardCharsets.UTF_8);
+    return append(buf, buf.length);
+  }
+
+  /**
+   * Truncates the file.
+   * @param size The new size of the file.
+   * @return The result status.
+   * @note If the file is shrunk, data after the new file end is discarded.  If the file is
+   * expanded, null codes are filled after the old file end.
+   */
+  public native Status truncate(long size);
+
+  /**
+   * Synchronizes the content of the file to the file system.
+   * @param hard True to do physical synchronization with the hardware or false to do only
+   * logical synchronization with the file system.
+   * @param off The offset of the region to be synchronized.
+   * @param size The size of the region to be synchronized.  If it is zero, the length to the
+   * end of file is specified.
+   * @return The result status.
+   * @note The pysical file size can be larger than the logical size in order to improve
+   * performance by reducing frequency of allocation.  Thus, you should call this function before
+   * accessing the file with external tools.
+   */
+  public native Status synchronize(boolean hard, long off, long size);
+
+  /**
+   * Synchronizes the entire content of the file to the file system.
+   * @param hard True to do physical synchronization with the hardware or false to do only
+   * logical synchronization with the file system.
+   * @return The result status.
+   */
+  public Status synchronize(boolean hard) {
+    return synchronize(hard, 0, 0);
+  }
+
+  /**
+   * Gets the size of the file.
+   * @return The size of the file or -1 on failure.
+   */
+  public native long size();
+
+  /**
    * Searches the file and get lines which match a pattern.
    * @param mode The search mode.  "contain" extracts keys containing the pattern.  "begin"
    * extracts keys beginning with the pattern.  "end" extracts keys ending with the pattern.

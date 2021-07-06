@@ -77,6 +77,13 @@ public class Test {
       } finally {
         removeDirectory(tmp_dir_path);
       }
+    } else if (args[0].equals("file")) {
+      String tmp_dir_path = createTempDir();
+      try {
+        rv = runFile(tmp_dir_path);
+      } finally {
+        removeDirectory(tmp_dir_path);
+      }
     } else if (args[0].equals("perf")) {
       String path = "";
       int num_iterations = 10000;
@@ -916,6 +923,42 @@ public class Test {
       check(e.getStatus().equals(Status.Code.INVALID_ARGUMENT_ERROR));
     }
     check(file.close().equals(Status.Code.SUCCESS));
+    file.destruct();
+    STDOUT.printf("  ... OK\n");
+    return 0;
+  }
+
+  /**
+   * Runs the file test.
+   */
+  private static int runFile(String tmp_dir_path) {
+    STDOUT.printf("Running file tests:\n");
+    String path = tmp_dir_path + java.io.File.separatorChar + "casket.txt";
+    File file = new File();
+    Map params = Utility.parseParams(
+        "truncate=true,file=pos-atom,block_size=512,access_options=padding,pagecache");
+    check(file.open(path, true, params).equals(Status.SUCCESS));
+    check(file.write(5, "12345").equals(Status.SUCCESS));
+    check(file.write(0, "ABCDE").equals(Status.SUCCESS));
+    check(file.append("FGH").equals(Status.SUCCESS));
+    check(file.append("IJ").equals(Status.SUCCESS));
+    check(file.size() == 15);
+    check(file.truncate(12).equals(Status.SUCCESS));
+    check(file.synchronize(false).equals(Status.SUCCESS));
+    check(file.size() == 12);
+    String str = file.readString(0, 12);
+    check(str.equals("ABCDE12345FG"));
+    str = file.readString(3, 5);
+    check(str.equals("DE123"));
+    Status status = new Status();
+    check(file.read(1024, 10, status) == null);
+    check(status.equals(Status.INFEASIBLE_ERROR));
+    check(file.close().equals(Status.SUCCESS));
+    check(file.open(path, false).equals(Status.SUCCESS));
+    check(file.size() == 512);
+    str = file.readString(4, 7);
+    check(str.equals("E12345F"));
+    check(file.close().equals(Status.SUCCESS));
     file.destruct();
     STDOUT.printf("  ... OK\n");
     return 0;

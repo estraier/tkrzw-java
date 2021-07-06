@@ -1396,6 +1396,128 @@ JNIEXPORT jobject JNICALL Java_tkrzw_File_close
   return NewStatus(env, status);
 }
 
+
+// Implementation of File#read.
+JNIEXPORT jobject JNICALL Java_tkrzw_File_read
+(JNIEnv* env, jobject jself, jlong off, jbyteArray jbuf, jlong size) {
+  tkrzw::PolyFile* file = GetFile(env, jself);
+  if (file == nullptr) {
+    ThrowNullPointer(env);
+    return nullptr;
+  }
+  if (jbuf == nullptr) {
+    ThrowNullPointer(env);
+    return nullptr;
+  }
+  if (size < 0 || size > env->GetArrayLength(jbuf)) {
+    ThrowIllegalArgument(env, "invalid size");
+    return nullptr;
+  }
+  jboolean copied = false;
+  jbyte* buf_ptr = env->GetByteArrayElements(jbuf, &copied);
+  if (buf_ptr == nullptr) {
+    ThrowOutOfMemory(env);
+    return nullptr;
+  }
+  const tkrzw::Status status = file->Read(off, (char*)buf_ptr, size);
+  if (copied) {
+    env->ReleaseByteArrayElements(jbuf, buf_ptr, 0);
+  }
+  return NewStatus(env, status);
+}
+
+// Implementation of File#write.
+JNIEXPORT jobject JNICALL Java_tkrzw_File_write
+(JNIEnv* env, jobject jself, jlong off, jbyteArray jbuf, jlong size) {
+  tkrzw::PolyFile* file = GetFile(env, jself);
+  if (file == nullptr) {
+    ThrowNullPointer(env);
+    return nullptr;
+  }
+  if (jbuf == nullptr) {
+    ThrowNullPointer(env);
+    return nullptr;
+  }
+  if (size < 0 || size > env->GetArrayLength(jbuf)) {
+    ThrowIllegalArgument(env, "invalid size");
+    return nullptr;
+  }
+  jboolean copied = false;
+  jbyte* buf_ptr = env->GetByteArrayElements(jbuf, &copied);
+  if (buf_ptr == nullptr) {
+    ThrowOutOfMemory(env);
+    return nullptr;
+  }
+  const tkrzw::Status status = file->Write(off, (char*)buf_ptr, size);
+  if (copied) {
+    env->ReleaseByteArrayElements(jbuf, buf_ptr, JNI_ABORT);
+  }
+  return NewStatus(env, status);
+}
+
+// Implementation of File#append.
+JNIEXPORT jobject JNICALL Java_tkrzw_File_append
+(JNIEnv* env, jobject jself, jbyteArray jbuf, jlong size) {
+  tkrzw::PolyFile* file = GetFile(env, jself);
+  if (file == nullptr) {
+    ThrowNullPointer(env);
+    return nullptr;
+  }
+  if (jbuf == nullptr) {
+    ThrowNullPointer(env);
+    return nullptr;
+  }
+  if (size < 0 || size > env->GetArrayLength(jbuf)) {
+    ThrowIllegalArgument(env, "invalid size");
+    return nullptr;
+  }
+  jboolean copied = false;
+  jbyte* buf_ptr = env->GetByteArrayElements(jbuf, &copied);
+  if (buf_ptr == nullptr) {
+    ThrowOutOfMemory(env);
+    return nullptr;
+  }
+  const tkrzw::Status status = file->Append((char*)buf_ptr, size);
+  if (copied) {
+    env->ReleaseByteArrayElements(jbuf, buf_ptr, JNI_ABORT);
+  }
+  return NewStatus(env, status);
+}
+
+// Implementation of File#truncate.
+JNIEXPORT jobject JNICALL Java_tkrzw_File_truncate
+(JNIEnv* env, jobject jself, jlong size) {
+  tkrzw::PolyFile* file = GetFile(env, jself);
+  if (file == nullptr) {
+    ThrowNullPointer(env);
+    return nullptr;
+  }
+  const tkrzw::Status status = file->Truncate(size);
+  return NewStatus(env, status);
+}
+
+JNIEXPORT jobject JNICALL Java_tkrzw_File_synchronize
+(JNIEnv* env, jobject jself, jboolean hard, jlong off, jlong size) {
+  tkrzw::PolyFile* file = GetFile(env, jself);
+  if (file == nullptr) {
+    ThrowNullPointer(env);
+    return nullptr;
+  }
+  const tkrzw::Status status = file->Synchronize(hard, off, size);
+  return NewStatus(env, status);
+}
+
+// Implementation of File#size.
+JNIEXPORT jlong JNICALL Java_tkrzw_File_size
+(JNIEnv* env, jobject jself) {
+  tkrzw::PolyFile* file = GetFile(env, jself);
+  if (file == nullptr) {
+    ThrowNullPointer(env);
+    return -1;
+  }
+  return file->GetSizeSimple();
+}
+
 // Implementation of File#search.
 JNIEXPORT jobjectArray JNICALL Java_tkrzw_File_search
 (JNIEnv* env, jobject jself, jstring jmode, jstring jpattern, jint capacity, jboolean utf) {
@@ -1426,7 +1548,30 @@ JNIEXPORT jobjectArray JNICALL Java_tkrzw_File_search
 // Implementation of File#toString.
 JNIEXPORT jstring JNICALL Java_tkrzw_File_toString
 (JNIEnv* env, jobject jself) {
-  return NewString(env, "tkrzw.File");
+  tkrzw::PolyFile* file = GetFile(env, jself);
+  std::string expr = "tkrzw.File(";
+  std::string class_name = "unknown";
+  auto* in_file = file->GetInternalFile();
+  if (in_file != nullptr) {
+    const auto& file_type = in_file->GetType();
+    if (file_type == typeid(tkrzw::StdFile)) {
+      class_name = "StdFile";
+    } else if (file_type == typeid(tkrzw::MemoryMapParallelFile)) {
+      class_name = "MemoryMapParallelFile";
+    } else if (file_type == typeid(tkrzw::MemoryMapAtomicFile)) {
+      class_name = "MemoryMapAtomicFile";
+    } else if (file_type == typeid(tkrzw::PositionalParallelFile)) {
+      class_name = "PositionalParallelFile";
+    } else if (file_type == typeid(tkrzw::PositionalAtomicFile)) {
+      class_name = "PositionalAtomicFile";
+    }
+  }
+  const std::string path = file->GetPathSimple();
+  const int64_t count = file->GetSizeSimple();
+  expr += tkrzw::StrCat("class=", class_name, ", path=", tkrzw::StrEscapeC(path, true),
+                        ", size=", count);
+  expr += ")";
+  return NewString(env, expr.c_str());
 }
 
 // END OF FILE
