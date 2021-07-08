@@ -253,12 +253,33 @@ public class File {
    * @param mode The search mode.  "contain" extracts keys containing the pattern.  "begin"
    * extracts keys beginning with the pattern.  "end" extracts keys ending with the pattern.
    * "regex" extracts keys partially matches the pattern of a regular expression.  "edit"
-   * extracts keys whose edit distance to the pattern is the least.
+   * extracts keys whose edit distance to the UTF-8 pattern is the least.  "editbin" extracts
+   * keys whose edit distance to the binary pattern is the least.
    * @param pattern The pattern for matching.
    * @param capacity The maximum records to obtain.  0 means unlimited.
    * @return An array of lines matching the condition.
    */
-  public native String[] search(String mode, String pattern, int capacity);
+  public native byte[][] search(String mode, byte[] pattern, int capacity);
+
+  /**
+   * Searches the file and get lines which match a pattern, with string data.
+   * @param mode The search mode.  "contain" extracts keys containing the pattern.  "begin"
+   * extracts keys beginning with the pattern.  "end" extracts keys ending with the pattern.
+   * "regex" extracts keys partially matches the pattern of a regular expression.  "edit"
+   * extracts keys whose edit distance to the UTF-8 pattern is the least.  "editbin" extracts
+   * keys whose edit distance to the binary pattern is the least.
+   * @param pattern The pattern for matching.
+   * @param capacity The maximum records to obtain.  0 means unlimited.
+   * @return An array of lines matching the condition.
+   */
+  public String[] search(String mode, String pattern, int capacity) {
+    byte[][] result = search(mode, pattern.getBytes(StandardCharsets.UTF_8), capacity);
+    String[] strResult = new String[result.length];
+    for (int i = 0; i < result.length; i++) {
+      strResult[i] = new String(result[i], StandardCharsets.UTF_8);
+    }
+    return strResult;
+  }
 
   /**
    * Gets a string representation of the iterator.

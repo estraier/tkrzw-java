@@ -1526,14 +1526,14 @@ JNIEXPORT jlong JNICALL Java_tkrzw_File_getSize
 
 // Implementation of File#search.
 JNIEXPORT jobjectArray JNICALL Java_tkrzw_File_search
-(JNIEnv* env, jobject jself, jstring jmode, jstring jpattern, jint capacity) {
+(JNIEnv* env, jobject jself, jstring jmode, jbyteArray jpattern, jint capacity) {
   tkrzw::PolyFile* file = GetFile(env, jself);
   if (file == nullptr || jmode == nullptr || jpattern == nullptr) {
     ThrowNullPointer(env);
     return nullptr;
   }
   SoftString mode(env, jmode);
-  SoftString pattern(env, jpattern);
+  SoftByteArray pattern(env, jpattern);
   std::vector<std::string> lines;
   const tkrzw::Status status =
       SearchTextFileModal(file, mode.Get(), pattern.Get(), &lines, capacity);
