@@ -1037,7 +1037,7 @@ JNIEXPORT jboolean JNICALL Java_tkrzw_DBM_isOrdered
 
 // Implementation of DBM#search.
 JNIEXPORT jobjectArray JNICALL Java_tkrzw_DBM_search
-(JNIEnv* env, jobject jself, jstring jmode, jbyteArray jpattern, jint capacity, jboolean utf) {
+(JNIEnv* env, jobject jself, jstring jmode, jbyteArray jpattern, jint capacity) {
   tkrzw::ParamDBM* dbm = GetDBM(env, jself);
   if (dbm == nullptr) {
     ThrowIllegalArgument(env, "not opened database");
@@ -1050,8 +1050,7 @@ JNIEXPORT jobjectArray JNICALL Java_tkrzw_DBM_search
   SoftString mode(env, jmode);
   SoftByteArray pattern(env, jpattern);
   std::vector<std::string> keys;
-  const tkrzw::Status status =
-      SearchDBMModal(dbm, mode.Get(), pattern.Get(), &keys, capacity, utf);
+  const tkrzw::Status status = SearchDBMModal(dbm, mode.Get(), pattern.Get(), &keys, capacity);
   if (status != tkrzw::Status::SUCCESS) {
     ThrowStatus(env, status);
     return nullptr;
@@ -1527,7 +1526,7 @@ JNIEXPORT jlong JNICALL Java_tkrzw_File_getSize
 
 // Implementation of File#search.
 JNIEXPORT jobjectArray JNICALL Java_tkrzw_File_search
-(JNIEnv* env, jobject jself, jstring jmode, jstring jpattern, jint capacity, jboolean utf) {
+(JNIEnv* env, jobject jself, jstring jmode, jstring jpattern, jint capacity) {
   tkrzw::PolyFile* file = GetFile(env, jself);
   if (file == nullptr || jmode == nullptr || jpattern == nullptr) {
     ThrowNullPointer(env);
@@ -1537,7 +1536,7 @@ JNIEXPORT jobjectArray JNICALL Java_tkrzw_File_search
   SoftString pattern(env, jpattern);
   std::vector<std::string> lines;
   const tkrzw::Status status =
-      SearchTextFileModal(file, mode.Get(), pattern.Get(), &lines, capacity, utf);
+      SearchTextFileModal(file, mode.Get(), pattern.Get(), &lines, capacity);
   if (status != tkrzw::Status::SUCCESS) {
     ThrowStatus(env, status);
     return nullptr;

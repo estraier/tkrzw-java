@@ -5,11 +5,11 @@
 #================================================================
 
 # Package name
-AC_INIT(tkrzw-java, 0.1.11)
+AC_INIT(tkrzw-java, 0.1.12)
 
 # Package information
 MYLIBVER=0
-MYLIBREV=9
+MYLIBREV=10
 
 # Targets
 MYJARFILES="tkrzw.jar"

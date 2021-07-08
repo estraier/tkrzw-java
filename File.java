@@ -256,10 +256,9 @@ public class File {
    * extracts keys whose edit distance to the pattern is the least.
    * @param pattern The pattern for matching.
    * @param capacity The maximum records to obtain.  0 means unlimited.
-   * @param utf If true, text is treated as UTF-8, which affects "regex" and "edit".
    * @return An array of lines matching the condition.
    */
-  public native String[] search(String mode, String pattern, int capacity, boolean utf);
+  public native String[] search(String mode, String pattern, int capacity);
 
   /**
    * Gets a string representation of the iterator.

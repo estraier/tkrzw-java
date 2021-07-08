@@ -869,15 +869,15 @@ public class Test {
       }
       check(dbm.synchronize(false).equals(Status.SUCCESS));
       check(dbm.count() == 100);
-      check(dbm.search("contain", "001", 0, false).length == 12);
-      check(dbm.search("contain", "001", 3, false).length == 3);
-      check(dbm.search("begin", "0000001", 0, false).length == 10);
-      check(dbm.search("end", "1", 0, false).length == 10);
-      check(dbm.search("regex", "^\\d+1$", 0, false).length == 10);
-      check(dbm.search("edit", "00000100", 3, true).length == 3);
-      check(dbm.search("edit", "00000100", 3, false).length == 3);
+      check(dbm.search("contain", "001", 0).length == 12);
+      check(dbm.search("contain", "001", 3).length == 3);
+      check(dbm.search("begin", "0000001", 0).length == 10);
+      check(dbm.search("end", "1", 0).length == 10);
+      check(dbm.search("regex", "^\\d+1$", 0).length == 10);
+      check(dbm.search("edit", "00000100", 3).length == 3);
+      check(dbm.search("editbin", "00000100", 3).length == 3);
       try {
-        dbm.search("foo", "00000100", 3, false);
+        dbm.search("foo", "00000100", 3);
         check(false);
       } catch (StatusException e) {
         check(e.getStatus().equals(Status.Code.INVALID_ARGUMENT_ERROR));
@@ -909,15 +909,15 @@ public class Test {
     File file = new File();
     check(file.open(dest_path, false).equals(Status.SUCCESS));
     check(file.toString().indexOf("File") >= 0);
-    check(file.search("contain", "001", 0, false).length == 12);
-    check(file.search("contain", "001", 3, false).length == 3);
-    check(file.search("begin", "0000001", 0, false).length == 10);
-    check(file.search("end", "1", 0, false).length == 10);
-    check(file.search("regex", "^\\d+1$", 0, false).length == 10);
-    check(file.search("edit", "00000100", 3, true).length == 3);
-    check(file.search("edit", "00000100", 3, false).length == 3);
+    check(file.search("contain", "001", 0).length == 12);
+    check(file.search("contain", "001", 3).length == 3);
+    check(file.search("begin", "0000001", 0).length == 10);
+    check(file.search("end", "1", 0).length == 10);
+    check(file.search("regex", "^\\d+1$", 0).length == 10);
+    check(file.search("edit", "00000100", 3).length == 3);
+    check(file.search("editbin", "00000100", 3).length == 3);
     try {
-      file.search("foo", "00000100", 3, false);
+      file.search("foo", "00000100", 3);
       check(false);
     } catch (StatusException e) {
       check(e.getStatus().equals(Status.Code.INVALID_ARGUMENT_ERROR));

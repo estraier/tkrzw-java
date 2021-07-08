@@ -635,28 +635,27 @@ public class DBM {
    * @param mode The search mode.  "contain" extracts keys containing the pattern.  "begin"
    * extracts keys beginning with the pattern.  "end" extracts keys ending with the pattern.
    * "regex" extracts keys partially matches the pattern of a regular expression.  "edit"
-   * extracts keys whose edit distance to the pattern is the least.
+   * extracts keys whose edit distance to the pattern is the least.  "editbin" extracts
+   * keys whose edit distance to the binary pattern is the least.
    * @param pattern The pattern for matching.
    * @param capacity The maximum records to obtain.  0 means unlimited.
-   * @param utf If true, text is treated as UTF-8, which affects "regex" and "edit".
    * @return An array of keys matching the condition.
    */
-  public native byte[][] search(
-      String mode, byte[] pattern, int capacity, boolean utf);
+  public native byte[][] search(String mode, byte[] pattern, int capacity);
 
   /**
    * Searches the database and get keys which match a pattern, with string data.
    * @param mode The search mode.  "contain" extracts keys containing the pattern.  "begin"
    * extracts keys beginning with the pattern.  "end" extracts keys ending with the pattern.
    * "regex" extracts keys partially matches the pattern of a regular expression.  "edit"
-   * extracts keys whose edit distance to the pattern is the least.
+   * extracts keys whose edit distance to the UTF-8 pattern is the least.  "editbin" extracts
+   * keys whose edit distance to the binary pattern is the least.
    * @param pattern The pattern for matching.
    * @param capacity The maximum records to obtain.  0 means unlimited.
-   * @param utf If true, text is treated as UTF-8, which affects "regex" and "edit".
    * @return An array of keys matching the condition.
    */
-  public String[] search(String mode, String pattern, int capacity, boolean utf){
-    byte[][] keys = search(mode, pattern.getBytes(StandardCharsets.UTF_8), capacity, utf);
+  public String[] search(String mode, String pattern, int capacity){
+    byte[][] keys = search(mode, pattern.getBytes(StandardCharsets.UTF_8), capacity);
     String[] strKeys = new String[keys.length];
     for (int i = 0; i < keys.length; i++) {
       strKeys[i] = new String(keys[i], StandardCharsets.UTF_8);
