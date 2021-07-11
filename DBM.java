@@ -620,7 +620,7 @@ public class DBM {
   /**
    * Imports records to a database from a flat record file.
    * @param file The file object to read records from.
-   * @return True on success or false on failure.
+   * @return The result status.
    */
   public native Status importRecordsFromFlatRecords(File file);
 
