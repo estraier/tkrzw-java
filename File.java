@@ -75,13 +75,24 @@ public class File {
   public native Status open(String path, boolean writable, Map<String, String> params);
 
   /**
+   * Opens a file, with a string expression for optional parameters.
+   * @param path A path of the file.
+   * @param writable If true, the file is writable.  If false, it is read-only.
+   * @param params The optional parameter expression in "key=value,key=value" format.
+   * @return The result status.
+   */
+  public Status open(String path, boolean writable, String params) {
+    return open(path, writable, Utility.parseParams(params));
+  }
+
+  /**
    * Opens a file, without optional parameters.
    * @param path A path of the file.
    * @param writable If true, the file is writable.  If false, it is read-only.
    * @return The result status.
    */
   public Status open(String path, boolean writable) {
-    return open(path, writable, null);
+    return open(path, writable, (Map<String, String>)null);
   }
 
   /**

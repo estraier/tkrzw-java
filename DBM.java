@@ -156,13 +156,24 @@ public class DBM {
   public native Status open(String path, boolean writable, Map<String, String> params);
 
   /**
+   * Opens a database file, with a string expression for optional parameters.
+   * @param path A path of the file.
+   * @param writable If true, the file is writable.  If false, it is read-only.
+   * @param params The optional parameter expression in "key=value,key=value" format.
+   * @return The result status.
+   */
+  public Status open(String path, boolean writable, String params) {
+    return open(path, writable, Utility.parseParams(params));
+  }
+
+  /**
    * Opens a database file, without optional parameters.
    * @param path A path of the file.
    * @param writable If true, the file is writable.  If false, it is read-only.
    * @return The result status.
    */
   public Status open(String path, boolean writable) {
-    return open(path, writable, null);
+    return open(path, writable, (Map<String, String>)null);
   }
 
   /**
@@ -598,13 +609,29 @@ public class DBM {
   public native Status export(DBM dest_dbm);
 
   /**
+   * Exports all records of a database to a flat record file.
+   * @param file The file object to write records in.
+   * @return The result status.
+   * @note A flat record file contains a sequence of binary records without any high level
+   * structure so it is useful as a intermediate file for data migration.
+   */
+  public native Status exportRecordsToFlatRecords(File file);
+
+  /**
+   * Imports records to a database from a flat record file.
+   * @param file The file object to read records from.
+   * @return True on success or false on failure.
+   */
+  public native Status importRecordsFromFlatRecords(File file);
+
+  /**
    * Exports the keys of all records as lines to a text file.
-   * @param dest_path A path of the output text file.
+   * @param file The file object to write keys in.
    * @return The result status.
    * @note As the exported text file is smaller than the database file, scanning the text file
    * by the search method is often faster than scanning the whole database.
    */
-  public native Status exportKeysAsLines(String dest_path);
+  public native Status exportKeysAsLines(File file);
 
   /**
    * Inspects the database.

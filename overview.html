@@ -135,7 +135,7 @@ public class Example2 {
     try {
       // Prepares the database, giving tuning parameters.
       Status status = dbm.open(
-          "casket.tkh", true, Utility.parseParams("truncate=True,num_buckets=100"));
+          "casket.tkh", true, "truncate=True,num_buckets=100");
       // Checks the status explicitly.
       if (!status.isOK()) {
         throw new StatusException(status);

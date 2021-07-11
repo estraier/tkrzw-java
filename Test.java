@@ -897,16 +897,20 @@ public class Test {
     String path = tmp_dir_path + java.io.File.separatorChar + "casket.tkh";
     String dest_path = tmp_dir_path + java.io.File.separatorChar + "casket.txt";
     DBM dbm = new DBM();
-    check(dbm.open(path, true).equals(Status.SUCCESS));
+    check(dbm.open(path, true, "num_buckets=100").equals(Status.SUCCESS));
     for (int i = 1; i <= 100; i++) {
       String key = String.format("%08d", i);
       String value = String.format("%d", i);
       check(dbm.set(key, value, false).equals(Status.SUCCESS));
     }
-    check(dbm.exportKeysAsLines(dest_path).equals(Status.Code.SUCCESS));
-    check(dbm.close().equals(Status.Code.SUCCESS));
-    dbm.destruct();
     File file = new File();
+    check(file.open(dest_path, true, "truncate=true").equals(Status.SUCCESS));
+    check(dbm.exportKeysAsLines(file).equals(Status.Code.SUCCESS));
+    check(file.close().equals(Status.SUCCESS));
+    file.destruct();
+    check(dbm.close().equals(Status.SUCCESS));
+    dbm.destruct();
+    file = new File();
     check(file.open(dest_path, false).equals(Status.SUCCESS));
     check(file.toString().indexOf("File") >= 0);
     check(file.search("contain", "001", 0).length == 12);

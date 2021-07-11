@@ -970,26 +970,40 @@ JNIEXPORT jobject JNICALL Java_tkrzw_DBM_export
   return NewStatus(env, status);
 }
 
+/*
+ * Class:     tkrzw_DBM
+ * Method:    exportRecordsToFlatRecords
+ * Signature: (Ltkrzw/File;)Ltkrzw/Status;
+ */
+JNIEXPORT jobject JNICALL Java_tkrzw_DBM_exportRecordsToFlatRecords
+(JNIEnv* env, jobject jself, jobject jfile) {
+  return nullptr;
+}
+
+/*
+ * Class:     tkrzw_DBM
+ * Method:    importRecordsFromFlatRecords
+ * Signature: (Ltkrzw/File;)Ltkrzw/Status;
+ */
+JNIEXPORT jobject JNICALL Java_tkrzw_DBM_importRecordsFromFlatRecords
+(JNIEnv* env, jobject jself, jobject jfile) {
+  return nullptr;
+}
+
 // Implementation of DBM#exportKeysAsLines.
 JNIEXPORT jobject JNICALL Java_tkrzw_DBM_exportKeysAsLines
-(JNIEnv* env, jobject jself, jstring jdestpath) {
+(JNIEnv* env, jobject jself, jobject jfile) {
   tkrzw::ParamDBM* dbm = GetDBM(env, jself);
   if (dbm == nullptr) {
     ThrowIllegalArgument(env, "not opened database");
     return nullptr;
   }
-  if (jdestpath == nullptr) {
+  tkrzw::PolyFile* file = GetFile(env, jfile);
+  if (file == nullptr) {
     ThrowNullPointer(env);
     return nullptr;
   }
-  SoftString destpath(env, jdestpath);
-  tkrzw::MemoryMapParallelFile file;
-  tkrzw::Status status = file.Open(
-      std::string(destpath.Get()), true, tkrzw::File::OPEN_TRUNCATE);
-  if (status == tkrzw::Status::SUCCESS) {
-    status |= tkrzw::ExportDBMKeysAsLines(dbm, &file);
-    status |= file.Close();
-  }
+  const tkrzw::Status status = tkrzw::ExportDBMKeysAsLines(dbm, file);
   return NewStatus(env, status);
 }
 
