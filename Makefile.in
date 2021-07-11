@@ -115,7 +115,7 @@ check :
 	$(RUNENV) $(JAVARUN) $(JAVARUNFLAGS) tkrzw.Test iter
 	$(RUNENV) $(JAVARUN) $(JAVARUNFLAGS) tkrzw.Test thread
 	$(RUNENV) $(JAVARUN) $(JAVARUNFLAGS) tkrzw.Test search
-	$(RUNENV) $(JAVARUN) $(JAVARUNFLAGS) tkrzw.Test text
+	$(RUNENV) $(JAVARUN) $(JAVARUNFLAGS) tkrzw.Test export
 	$(RUNENV) $(JAVARUN) $(JAVARUNFLAGS) tkrzw.Test file
 	$(RUNENV) $(JAVARUN) $(JAVARUNFLAGS) tkrzw.Test perf \
 	  --path casket.tkh --params "num_buckets=100000" --iter 20000 --threads 5
