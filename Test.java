@@ -937,7 +937,6 @@ public class Test {
     }
     check(file.close().equals(Status.Code.SUCCESS));
     file.destruct();
-
     STDOUT.printf("  ... OK\n");
     return 0;
   }
