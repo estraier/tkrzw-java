@@ -70,10 +70,10 @@ public class Test {
       } finally {
         removeDirectory(tmp_dir_path);
       }
-    } else if (args[0].equals("text")) {
+    } else if (args[0].equals("export")) {
       String tmp_dir_path = createTempDir();
       try {
-        rv = runText(tmp_dir_path);
+        rv = runExport(tmp_dir_path);
       } finally {
         removeDirectory(tmp_dir_path);
       }
@@ -890,10 +890,10 @@ public class Test {
   }
 
   /**
-   * Runs the text test.
+   * Runs the export test.
    */
-  private static int runText(String tmp_dir_path) {
-    STDOUT.printf("Running text tests:\n");
+  private static int runExport(String tmp_dir_path) {
+    STDOUT.printf("Running export tests:\n");
     String path = tmp_dir_path + java.io.File.separatorChar + "casket.tkh";
     String dest_path = tmp_dir_path + java.io.File.separatorChar + "casket.txt";
     DBM dbm = new DBM();
@@ -904,6 +904,15 @@ public class Test {
       check(dbm.set(key, value, false).equals(Status.SUCCESS));
     }
     File file = new File();
+    check(file.open(dest_path, true, "truncate=true").equals(Status.SUCCESS));
+    check(dbm.exportRecordsToFlatRecords(file).equals(Status.Code.SUCCESS));
+    check(dbm.clear().equals(Status.SUCCESS));
+    check(dbm.count() == 0);
+    check(dbm.importRecordsFromFlatRecords(file).equals(Status.Code.SUCCESS));
+    check(dbm.count() == 100);
+    check(file.close().equals(Status.SUCCESS));
+    file.destruct();
+    file = new File();
     check(file.open(dest_path, true, "truncate=true").equals(Status.SUCCESS));
     check(dbm.exportKeysAsLines(file).equals(Status.Code.SUCCESS));
     check(file.close().equals(Status.SUCCESS));
@@ -928,6 +937,7 @@ public class Test {
     }
     check(file.close().equals(Status.Code.SUCCESS));
     file.destruct();
+
     STDOUT.printf("  ... OK\n");
     return 0;
   }
