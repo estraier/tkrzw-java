@@ -577,11 +577,13 @@ public class Test {
       Map<String, String> multi_records = Map.of(
           "one", "first", "two", "second", "three", "third");
       check(export_dbm.setMultiStr(multi_records, true).equals(Status.SUCCESS));
+      multi_records = Map.of("two", "2", "three", "3");
+      check(export_dbm.appendMultiStr(multi_records, ":").equals(Status.SUCCESS));
       String[] multi_keys = {"one", "two", "three", "four"};
       multi_records = export_dbm.getMulti(multi_keys);
       check(multi_records.get("one").equals("first"));
-      check(multi_records.get("two").equals("second"));
-      check(multi_records.get("three").equals("third"));
+      check(multi_records.get("two").equals("second:2"));
+      check(multi_records.get("three").equals("third:3"));
       String[] half_keys = {"one", "two"};
       check(export_dbm.removeMulti(half_keys).equals(Status.SUCCESS));
       check(export_dbm.get("one", status) == null);

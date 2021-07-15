@@ -440,6 +440,31 @@ public class DBM {
   }
 
   /**
+   * Appends data to multiple records
+   * @param records The records to append.
+   * @param delim The delimiter to put after the existing record.
+   * @return The result status.
+   * @note If there's no existing record, the value is set without the delimiter.
+   */
+  public native Status appendMulti(Map<byte[], byte[]> records, byte[] delim);
+
+  /**
+   * Appends data to multiple records, with string data.
+   * @param records The records to append.
+   * @param delim The delimiter to put after the existing record.
+   * @return The result status.
+   * @note If there's no existing record, the value is set without the delimiter.
+   */
+  public Status appendMultiStr(Map<String, String> records, String delim) {
+    Map<byte[], byte[]> rawRecords = new HashMap<byte[], byte[]>();
+    for (Map.Entry<String, String> record : records.entrySet()) {
+      rawRecords.put(record.getKey().getBytes(StandardCharsets.UTF_8),
+                     record.getValue().getBytes(StandardCharsets.UTF_8));
+    }
+    return appendMulti(rawRecords, delim.getBytes(StandardCharsets.UTF_8));
+  }
+
+  /**
    * Compares the value of a record and exchanges if the condition meets.
    * @param key The key of the record.
    * @param expected The expected value.  If it is null, no existing record is expected.

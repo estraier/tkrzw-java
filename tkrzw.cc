@@ -551,7 +551,8 @@ JNIEXPORT jobject JNICALL Java_tkrzw_DBM_getMulti
     keys.emplace_back(key.Get());
   }
   std::vector<std::string_view> key_views(keys.begin(), keys.end());
-  const std::map<std::string, std::string>& records = dbm->GetMulti(key_views);
+  std::map<std::string, std::string> records;
+  dbm->GetMulti(key_views, &records);
   return CMapToJMap(env, records);
 }
 
@@ -763,6 +764,29 @@ JNIEXPORT jobject JNICALL Java_tkrzw_DBM_append
   SoftByteArray value(env, jvalue);
   SoftByteArray delim(env, jdelim);
   const tkrzw::Status status = dbm->Append(key.Get(), value.Get(), delim.Get());
+  return NewStatus(env, status);
+}
+
+// Implementation of DBM#appendMulti.
+JNIEXPORT jobject JNICALL Java_tkrzw_DBM_appendMulti
+(JNIEnv* env, jobject jself, jobject jrecords, jbyteArray jdelim) {
+  tkrzw::ParamDBM* dbm = GetDBM(env, jself);
+  if (dbm == nullptr) {
+    ThrowIllegalArgument(env, "not opened database");
+    return nullptr;
+  }
+  if (jrecords == nullptr || jdelim == nullptr) {
+    ThrowNullPointer(env);
+    return nullptr;
+  }
+  const std::map<std::string, std::string>& records = JMapToCMap(env, jrecords);
+  std::map<std::string_view, std::string_view> record_views;
+  for (const auto& record : records) {
+    record_views.emplace(std::pair(
+        std::string_view(record.first), std::string_view(record.second)));
+  }
+  SoftByteArray delim(env, jdelim);
+  const tkrzw::Status status = dbm->AppendMulti(record_views, delim.Get());
   return NewStatus(env, status);
 }
 
