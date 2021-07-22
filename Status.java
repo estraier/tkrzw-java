@@ -143,20 +143,20 @@ public class Status {
 
   /**
    * Checks equality.
-   * @param rht a status object.
-   * @return true for the both operands are equal, or false if not.
+   * @param rhs a status object.
+   * @return True for the both operands are equal, or false if not.
    */
-  public boolean equals(Status rht) {
-    return rht.code_ == code_;
+  public boolean equals(Status rhs) {
+    return rhs.code_ == code_;
   }
 
   /**
    * Checks equality.
-   * @param rht a status code.
-   * @return true for the both operands are equal, or false if not.
+   * @param rhs a status code.
+   * @return True for the both operands are equal, or false if not.
    */
-  public boolean equals(Code rht) {
-    return rht == code_;
+  public boolean equals(Code rhs) {
+    return rhs == code_;
   }
 
   /**
