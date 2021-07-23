@@ -724,6 +724,7 @@ public class DBM {
   /**
    * Makes an iterator for each record.
    * @return The iterator for each record.
+   * @note Every iterator should be destructed explicitly by the "destruct" method.
    */
   public native Iterator makeIterator();
 
