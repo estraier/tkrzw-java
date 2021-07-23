@@ -671,6 +671,12 @@ public class DBM {
   public native boolean isOpen();
 
   /**
+   * Checks whether the database is writable.
+   * @return True if the database is writable, or false if not.
+   */
+  public native boolean isWritable();
+
+  /**
    * Checks whether the database condition is healthy.
    * @return True if the database condition is healthy, or false if not.
    */

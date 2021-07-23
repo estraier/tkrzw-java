@@ -385,6 +385,7 @@ public class Test {
       if (!path.isEmpty()) {
         check(dbm.getFilePath().indexOf(path) >= 0);
       }
+      check(dbm.isWritable());
       check(dbm.isHealthy());
       if (class_name.equals("TreeDBM") || class_name.equals("SkipDBM") ||
           class_name.equals("BabyDBM") || class_name.equals("StdTreeDBM")) {

@@ -1063,6 +1063,17 @@ JNIEXPORT jboolean JNICALL Java_tkrzw_DBM_isOpen
   return dbm == nullptr ? false : true;
 }
 
+// Implementation of DBM#isWritable.
+JNIEXPORT jboolean JNICALL Java_tkrzw_DBM_isWritable
+(JNIEnv* env, jobject jself) {
+  tkrzw::ParamDBM* dbm = GetDBM(env, jself);
+  if (dbm == nullptr) {
+    ThrowIllegalArgument(env, "not opened database");
+    return false;
+  }
+  return dbm->IsWritable();
+}
+
 // Implementation of DBM#isHealthy.
 JNIEXPORT jboolean JNICALL Java_tkrzw_DBM_isHealthy
 (JNIEnv* env, jobject jself) {
