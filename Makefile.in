@@ -69,7 +69,7 @@ all : $(JARFILES) $(LIBRARYFILES)
 clean :
 	rm -rf $(JARFILES) $(HEADERFILES) $(LIBRARYFILES) $(LIBOBJFILES) \
 	  *.o a.out *.class check.in check.out gmon.out *.vlog \
-	  casket* *.kch *.kct *.kcd *.kcf *.wal *.tmpkc* *.kcss *.log *~ hoge moge tako ika
+	  casket* *.tkh *.tkt *.tks *.flat *.log *~ hoge moge tako ika uni
 
 untabify :
 	ls *.cc *.h *.java | while read name ; \
