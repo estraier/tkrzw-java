@@ -7,14 +7,20 @@ Please read the following documents.
   COPYING           - license
   CONTRIBUTING.md   - how to contribute
 
+You should install the latest version of Tkrzw to make sure the
+compatibility.
+
 To build the library, JDK 9 or later version is required.
 The environment variable JAVA_HOME must be set properly.
+
 Then, run these commands.
 
   ./configure
   make
   make check
   sudo make install
+
+See https://dbmx.net/tkrzw/api-java/ for details of the API.
 
 Thanks.
 
