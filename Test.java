@@ -159,7 +159,7 @@ public class Test {
     STDERR.printf("  iter\n");
     STDERR.printf("  search\n");
     STDERR.printf("  text\n");
-    STDERR.printf("  perf [--path num] [--threads num] [--params expr] [--random]\n");
+    STDERR.printf("  perf [--path num] [--iter num] [--threads num] [--params expr] [--random]\n");
     STDERR.printf("\n");
     System.exit(1);
   }
