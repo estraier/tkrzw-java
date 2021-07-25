@@ -28,6 +28,8 @@ public class Utility {
   static final String VERSION = getVersion();
   /** The recognized OS name. */
   static final String OS_NAME = getOSName();
+  /** The size of a memory page on the OS. */
+  static final int PAGE_SIZE = getPageSize();
 
   /**
    * Load the native library.
@@ -47,6 +49,11 @@ public class Utility {
    * Gets the recognized OS name.
    */
   private static native String getOSName();
+
+  /**
+   * Gets the size of a memory page on the OS.
+   */
+  private static native int getPageSize();
 
   /**
    * Parses a string of parameters in "key=value,key=value" format.

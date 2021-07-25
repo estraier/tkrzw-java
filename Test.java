@@ -238,6 +238,7 @@ public class Test {
       check(Utility.getMemoryCapacity() > 0);
       check(Utility.getMemoryUsage() > 0);
     }
+    check(Utility.PAGE_SIZE > 0);
     Map params = Utility.parseParams("key1=value1,key2=value2,foo,");
     check(params.size() == 2);
     check(params.get("key1").equals("value1"));

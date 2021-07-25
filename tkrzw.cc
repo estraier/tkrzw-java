@@ -392,6 +392,11 @@ JNIEXPORT jstring JNICALL Java_tkrzw_Utility_getOSName
   return NewString(env, tkrzw::OS_NAME);
 }
 
+JNIEXPORT jint JNICALL Java_tkrzw_Utility_getPageSize
+(JNIEnv* env, jclass jcls) {
+  return tkrzw::PAGE_SIZE;
+}
+
 // Implementation of Utility.getMemoryCapacity.
 JNIEXPORT jlong JNICALL Java_tkrzw_Utility_getMemoryCapacity
 (JNIEnv* env, jclass jcls) {
