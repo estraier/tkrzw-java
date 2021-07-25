@@ -260,6 +260,12 @@ public class File {
   public native long getSize();
 
   /**
+   * Gets the path of the file.
+   * @return The path of the file or null on failure.
+   */
+  public native String getPath();
+
+  /**
    * Searches the file and get lines which match a pattern.
    * @param mode The search mode.  "contain" extracts keys containing the pattern.  "begin"
    * extracts keys beginning with the pattern.  "end" extracts keys ending with the pattern.

@@ -1579,7 +1579,7 @@ JNIEXPORT jobject JNICALL Java_tkrzw_File_synchronize
   return NewStatus(env, status);
 }
 
-// Implementation of File#size.
+// Implementation of File#getSize.
 JNIEXPORT jlong JNICALL Java_tkrzw_File_getSize
 (JNIEnv* env, jobject jself) {
   tkrzw::PolyFile* file = GetFile(env, jself);
@@ -1588,6 +1588,22 @@ JNIEXPORT jlong JNICALL Java_tkrzw_File_getSize
     return -1;
   }
   return file->GetSizeSimple();
+}
+
+// Implementation of File#getPath.
+JNIEXPORT jstring JNICALL Java_tkrzw_File_getPath
+(JNIEnv* env, jobject jself) {
+  tkrzw::PolyFile* file = GetFile(env, jself);
+  if (file == nullptr) {
+    ThrowNullPointer(env);
+    return nullptr;
+  }
+  std::string path;
+  const tkrzw::Status status = file->GetPath(&path);
+  if (status == tkrzw::Status::SUCCESS) {
+    return NewString(env, path.c_str());
+  }
+  return nullptr;
 }
 
 // Implementation of File#search.

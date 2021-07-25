@@ -960,6 +960,7 @@ public class Test {
     check(file.append("FGH") == 10);
     check(file.append("IJ") == 13);
     check(file.getSize() == 15);
+    check(file.getPath().indexOf("casket.txt") > 0);
     check(file.truncate(12).equals(Status.SUCCESS));
     check(file.synchronize(false).equals(Status.SUCCESS));
     check(file.getSize() == 12);
