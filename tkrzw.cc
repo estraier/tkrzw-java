@@ -1000,51 +1000,51 @@ JNIEXPORT jobject JNICALL Java_tkrzw_DBM_export
 }
 
 JNIEXPORT jobject JNICALL Java_tkrzw_DBM_exportRecordsToFlatRecords
-(JNIEnv* env, jobject jself, jobject jfile) {
+(JNIEnv* env, jobject jself, jobject jdest_file) {
   tkrzw::ParamDBM* dbm = GetDBM(env, jself);
   if (dbm == nullptr) {
     ThrowIllegalArgument(env, "not opened database");
     return nullptr;
   }
-  tkrzw::PolyFile* file = GetFile(env, jfile);
-  if (file == nullptr) {
+  tkrzw::PolyFile* dest_file = GetFile(env, jdest_file);
+  if (dest_file == nullptr) {
     ThrowNullPointer(env);
     return nullptr;
   }
-  const tkrzw::Status status = tkrzw::ExportDBMRecordsToFlatRecords(dbm, file);
+  const tkrzw::Status status = tkrzw::ExportDBMRecordsToFlatRecords(dbm, dest_file);
   return NewStatus(env, status);
 }
 
 JNIEXPORT jobject JNICALL Java_tkrzw_DBM_importRecordsFromFlatRecords
-(JNIEnv* env, jobject jself, jobject jfile) {
+(JNIEnv* env, jobject jself, jobject jsrc_file) {
   tkrzw::ParamDBM* dbm = GetDBM(env, jself);
   if (dbm == nullptr) {
     ThrowIllegalArgument(env, "not opened database");
     return nullptr;
   }
-  tkrzw::PolyFile* file = GetFile(env, jfile);
-  if (file == nullptr) {
+  tkrzw::PolyFile* src_file = GetFile(env, jsrc_file);
+  if (src_file == nullptr) {
     ThrowNullPointer(env);
     return nullptr;
   }
-  const tkrzw::Status status = tkrzw::ImportDBMRecordsFromFlatRecords(dbm, file);
+  const tkrzw::Status status = tkrzw::ImportDBMRecordsFromFlatRecords(dbm, src_file);
   return NewStatus(env, status);
 }
 
 // Implementation of DBM#exportKeysAsLines.
 JNIEXPORT jobject JNICALL Java_tkrzw_DBM_exportKeysAsLines
-(JNIEnv* env, jobject jself, jobject jfile) {
+(JNIEnv* env, jobject jself, jobject jdest_file) {
   tkrzw::ParamDBM* dbm = GetDBM(env, jself);
   if (dbm == nullptr) {
     ThrowIllegalArgument(env, "not opened database");
     return nullptr;
   }
-  tkrzw::PolyFile* file = GetFile(env, jfile);
-  if (file == nullptr) {
+  tkrzw::PolyFile* dest_file = GetFile(env, jdest_file);
+  if (dest_file == nullptr) {
     ThrowNullPointer(env);
     return nullptr;
   }
-  const tkrzw::Status status = tkrzw::ExportDBMKeysAsLines(dbm, file);
+  const tkrzw::Status status = tkrzw::ExportDBMKeysAsLines(dbm, dest_file);
   return NewStatus(env, status);
 }
 

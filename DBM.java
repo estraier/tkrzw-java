@@ -635,28 +635,28 @@ public class DBM {
 
   /**
    * Exports all records of a database to a flat record file.
-   * @param file The file object to write records in.
+   * @param dest_file The file object to write records in.
    * @return The result status.
    * @note A flat record file contains a sequence of binary records without any high level
    * structure so it is useful as a intermediate file for data migration.
    */
-  public native Status exportRecordsToFlatRecords(File file);
+  public native Status exportRecordsToFlatRecords(File dest_file);
 
   /**
    * Imports records to a database from a flat record file.
-   * @param file The file object to read records from.
+   * @param src_file The file object to read records from.
    * @return The result status.
    */
-  public native Status importRecordsFromFlatRecords(File file);
+  public native Status importRecordsFromFlatRecords(File src_file);
 
   /**
    * Exports the keys of all records as lines to a text file.
-   * @param file The file object to write keys in.
+   * @param dest_file The file object to write keys in.
    * @return The result status.
    * @note As the exported text file is smaller than the database file, scanning the text file
    * by the search method is often faster than scanning the whole database.
    */
-  public native Status exportKeysAsLines(File file);
+  public native Status exportKeysAsLines(File dest_file);
 
   /**
    * Inspects the database.
