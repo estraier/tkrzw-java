@@ -909,10 +909,10 @@ public class Test {
     }
     File file = new File();
     check(file.open(dest_path, true, "truncate=true").equals(Status.SUCCESS));
-    check(dbm.exportRecordsToFlatRecords(file).equals(Status.Code.SUCCESS));
+    check(dbm.exportToFlatRecords(file).equals(Status.Code.SUCCESS));
     check(dbm.clear().equals(Status.SUCCESS));
     check(dbm.count() == 0);
-    check(dbm.importRecordsFromFlatRecords(file).equals(Status.Code.SUCCESS));
+    check(dbm.importFromFlatRecords(file).equals(Status.Code.SUCCESS));
     check(dbm.count() == 100);
     check(file.close().equals(Status.SUCCESS));
     file.destruct();

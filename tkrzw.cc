@@ -999,7 +999,7 @@ JNIEXPORT jobject JNICALL Java_tkrzw_DBM_export
   return NewStatus(env, status);
 }
 
-JNIEXPORT jobject JNICALL Java_tkrzw_DBM_exportRecordsToFlatRecords
+JNIEXPORT jobject JNICALL Java_tkrzw_DBM_exportToFlatRecords
 (JNIEnv* env, jobject jself, jobject jdest_file) {
   tkrzw::ParamDBM* dbm = GetDBM(env, jself);
   if (dbm == nullptr) {
@@ -1011,11 +1011,11 @@ JNIEXPORT jobject JNICALL Java_tkrzw_DBM_exportRecordsToFlatRecords
     ThrowNullPointer(env);
     return nullptr;
   }
-  const tkrzw::Status status = tkrzw::ExportDBMRecordsToFlatRecords(dbm, dest_file);
+  const tkrzw::Status status = tkrzw::ExportDBMToFlatRecords(dbm, dest_file);
   return NewStatus(env, status);
 }
 
-JNIEXPORT jobject JNICALL Java_tkrzw_DBM_importRecordsFromFlatRecords
+JNIEXPORT jobject JNICALL Java_tkrzw_DBM_importFromFlatRecords
 (JNIEnv* env, jobject jself, jobject jsrc_file) {
   tkrzw::ParamDBM* dbm = GetDBM(env, jself);
   if (dbm == nullptr) {
@@ -1027,7 +1027,7 @@ JNIEXPORT jobject JNICALL Java_tkrzw_DBM_importRecordsFromFlatRecords
     ThrowNullPointer(env);
     return nullptr;
   }
-  const tkrzw::Status status = tkrzw::ImportDBMRecordsFromFlatRecords(dbm, src_file);
+  const tkrzw::Status status = tkrzw::ImportDBMFromFlatRecords(dbm, src_file);
   return NewStatus(env, status);
 }
 

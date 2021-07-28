@@ -640,14 +640,14 @@ public class DBM {
    * @note A flat record file contains a sequence of binary records without any high level
    * structure so it is useful as a intermediate file for data migration.
    */
-  public native Status exportRecordsToFlatRecords(File dest_file);
+  public native Status exportToFlatRecords(File dest_file);
 
   /**
    * Imports records to a database from a flat record file.
    * @param src_file The file object to read records from.
    * @return The result status.
    */
-  public native Status importRecordsFromFlatRecords(File src_file);
+  public native Status importFromFlatRecords(File src_file);
 
   /**
    * Exports the keys of all records as lines to a text file.
