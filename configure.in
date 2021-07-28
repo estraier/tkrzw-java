@@ -5,11 +5,11 @@
 #================================================================
 
 # Package name
-AC_INIT(tkrzw-java, 0.1.16)
+AC_INIT([tkrzw-java], [0.1.17])
 
 # Package information
 MYLIBVER=0
-MYLIBREV=14
+MYLIBREV=15
 
 # Targets
 MYJARFILES="tkrzw.jar"
@@ -48,7 +48,7 @@ fi
 
 # Specify the installation path of Tkrzw
 AC_ARG_WITH(tkrzw,
-  AC_HELP_STRING([--with-tkrzw=DIR], [search DIR/include and DIR/lib for Tkrzw]))
+  AS_HELP_STRING([--with-tkrzw=DIR], [search DIR/include and DIR/lib for Tkrzw]))
 if test -n "$with_tkrzw"
 then
   MYCPPFLAGS="$MYCPPFLAGS -I$with_tkrzw/include"
@@ -81,6 +81,10 @@ printf 'checking JVMPLATFORM... '
 if uname | grep Darwin >config.tmp
 then
   JVMPLATFORM="mac"
+  if test -d "$MYJAVAHOME/include/darwin"
+  then
+    JVMPLATFORM="darwin"
+  fi
 else
   for file in `\ls $MYJAVAHOME/include`
   do
@@ -91,10 +95,14 @@ else
   done
 fi
 printf '%s\n' "$JVMPLATFORM"
-MYCPPFLAGS="$MYCPPFLAGS -I$MYJAVAHOME/include -I$MYJAVAHOME/include/$JVMPLATFORM"
-MYCPPFLAGS="$MYCPPFLAGS -I$MYJAVAHOME/Headers -I$MYJAVAHOME/Headers/$JVMPLATFORM"
-CPATH="$CPATH:$MYJAVAHOME/include:$MYJAVAHOME/include/$JVMPLATFORM"
-CPATH="$CPATH:$MYJAVAHOME/Headers:$MYJAVAHOME/Headers/$JVMPLATFORM"
+for suffix in include include/$JVMPLATFORM Header Header/$JVMPLATFORM
+do
+  if test -d "$MYJAVAHOME/$suffix"
+  then
+    MYCPPFLAGS="$MYCPPFLAGS -I$MYJAVAHOME/$suffix"
+    CPATH="$CPATH:$MYJAVAHOME/$suffix"
+  fi
+done
 
 # Java compiler
 printf 'checking JAVAC... '
@@ -222,7 +230,8 @@ AC_SUBST(MYRUNPATH)
 AC_SUBST(MYLDLIBPATHENV)
 
 # Targets
-AC_OUTPUT(Makefile)
+AC_CONFIG_FILES([Makefile])
+AC_OUTPUT
 
 # Messages
 printf '#================================================================\n'
