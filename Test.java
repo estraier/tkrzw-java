@@ -272,6 +272,12 @@ public class Test {
     check(status.equals(new Status(Status.UNKNOWN_ERROR, "")));
     check(status.equals(Status.UNKNOWN_ERROR));
     check(!status.isOK());
+    Status s2 = new Status(Status.NOT_IMPLEMENTED_ERROR, "void");
+    status.join(s2);
+    check(status.toString().equals("UNKNOWN_ERROR: foobar"));
+    status.set(Status.SUCCESS, "OK");
+    status.join(s2);
+    check(status.toString().equals("NOT_IMPLEMENTED_ERROR: void"));
     try {
       status.orDie();
       check(false);

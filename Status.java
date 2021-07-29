@@ -131,6 +131,17 @@ public class Status {
   }
 
   /**
+   * Assigns the internal state from another status object only if the current state is success.
+   * @param rhs The status object.
+   */
+  public void join(Status rhs) {
+    if (code_ == SUCCESS) {
+      code_ = rhs.code_;
+      message_ = rhs.message_;
+    }
+  }
+
+  /**
    * Gets the string expression.
    * @return The string expression.
    */
