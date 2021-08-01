@@ -39,22 +39,118 @@
 #include "tkrzw_File.h"
 #include "tkrzw_Utility.h"
 
+// Global variables.
+jstring obj_str_empty;
+jclass cls_outofmemory;
+jclass cls_nullpointer;
+jclass cls_illegalargument;
+jclass cls_byteary;
+jclass cls_map;
+jmethodID id_map_size;
+jmethodID id_map_entryset;
+jclass cls_set;
+jmethodID id_set_iterator;
+jclass cls_iter;
+jmethodID id_iter_hasnext;
+jmethodID id_iter_next;
+jclass cls_mapentry;
+jmethodID id_mapentry_getkey;
+jmethodID id_mapentry_getvalue;
+jclass cls_hashmap;
+jmethodID id_hashmap_init;
+jmethodID id_hashmap_put;
+jclass cls_status;
+jmethodID id_status_init;
+jobject obj_status_codes[tkrzw::Status::APPLICATION_ERROR+1];
+jmethodID id_status_set;
+jclass cls_status_code;
+jclass cls_status_andvalue;
+jmethodID id_status_andvalue_init;
+jfieldID id_status_andvalue_status;
+jfieldID id_status_andvalue_value;
+jclass cls_statusex;
+jmethodID id_statusex_init;
+jclass cls_dbm;
+jfieldID id_dbm_ptr;
+jclass cls_dbmiter;
+jfieldID id_dbmiter_ptr;
+jmethodID id_dbmiter_init;
+jclass cls_file;
+jfieldID id_file_ptr;
+
+// Makes the global class reference.
+jclass MakeClassRef(JNIEnv* env, const char* class_name) {
+  return (jclass)env->NewGlobalRef(env->FindClass(class_name));
+}
+
+// Initializes global variables.
+jint JNI_OnLoad(JavaVM* vm, void* reserved) {
+  constexpr jint jni_version = JNI_VERSION_1_8;
+  JNIEnv* env = nullptr;
+  if (vm->GetEnv(reinterpret_cast<void**>(&env), jni_version) != JNI_OK) {
+    return JNI_ERR;
+  }
+  obj_str_empty = (jstring)env->NewGlobalRef(env->NewStringUTF(""));
+  cls_outofmemory = MakeClassRef(env, "java/lang/OutOfMemoryError");
+  cls_nullpointer = MakeClassRef(env, "java/lang/NullPointerException");
+  cls_illegalargument = MakeClassRef(env, "java/lang/IllegalArgumentException");
+  cls_byteary = MakeClassRef(env, "[B");
+  cls_map = MakeClassRef(env, "java/util/Map");
+  id_map_size = env->GetMethodID(cls_map, "size", "()I");
+  id_map_entryset = env->GetMethodID(cls_map, "entrySet", "()Ljava/util/Set;");
+  cls_set = MakeClassRef(env, "java/util/Set");
+  id_set_iterator = env->GetMethodID(cls_set, "iterator", "()Ljava/util/Iterator;");
+  cls_iter = MakeClassRef(env, "java/util/Iterator");
+  id_iter_hasnext = env->GetMethodID(cls_iter, "hasNext", "()Z");
+  id_iter_next = env->GetMethodID(cls_iter, "next", "()Ljava/lang/Object;");
+  cls_mapentry = MakeClassRef(env, "java/util/Map$Entry");
+  id_mapentry_getkey = env->GetMethodID(cls_mapentry, "getKey", "()Ljava/lang/Object;");
+  id_mapentry_getvalue = env->GetMethodID(cls_mapentry, "getValue", "()Ljava/lang/Object;");
+  cls_hashmap = MakeClassRef(env, "java/util/HashMap");
+  id_hashmap_init = env->GetMethodID(cls_hashmap, "<init>", "(I)V");
+  id_hashmap_put = env->GetMethodID(
+      cls_hashmap, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
+  cls_status = MakeClassRef(env, "tkrzw/Status");
+  id_status_init = env->GetMethodID(
+      cls_status, "<init>", "(Ltkrzw/Status$Code;Ljava/lang/String;)V");
+  cls_status_code = MakeClassRef(env, "tkrzw/Status$Code");
+  for (int32_t code = 0; code <= tkrzw::Status::APPLICATION_ERROR; code++) {
+    const char* const code_name = tkrzw::Status::CodeName((tkrzw::Status::Code)code);
+    jfieldID id_code = env->GetStaticFieldID(cls_status_code, code_name, "Ltkrzw/Status$Code;");
+    jobject jcode = env->GetStaticObjectField(cls_status_code, id_code);
+    obj_status_codes[code] = env->NewGlobalRef(jcode);
+  }
+  id_status_set =
+      env->GetMethodID(cls_status, "set", "(Ltkrzw/Status$Code;Ljava/lang/String;)V");
+  cls_status_andvalue = MakeClassRef(env, "tkrzw/Status$AndValue");
+  id_status_andvalue_init = env->GetMethodID(cls_status_andvalue, "<init>", "()V");
+  id_status_andvalue_status = env->GetFieldID(cls_status_andvalue, "status", "Ltkrzw/Status;");
+  id_status_andvalue_value = env->GetFieldID(cls_status_andvalue, "value", "Ljava/lang/Object;");
+  cls_statusex = MakeClassRef(env, "tkrzw/StatusException");
+  id_statusex_init = env->GetMethodID(cls_statusex, "<init>", "(Ltkrzw/Status;)V");
+  cls_dbm = MakeClassRef(env, "tkrzw/DBM");
+  id_dbm_ptr = env->GetFieldID(cls_dbm, "ptr_", "J");
+  cls_dbmiter = MakeClassRef(env, "tkrzw/Iterator");
+  id_dbmiter_ptr = env->GetFieldID(cls_dbmiter, "ptr_", "J");
+  id_dbmiter_init = env->GetMethodID(cls_dbmiter, "<init>", "(Ltkrzw/DBM;)V");
+  cls_file = MakeClassRef(env, "tkrzw/File");
+  id_file_ptr = env->GetFieldID(cls_file, "ptr_", "J");
+  return jni_version;
+}
+
 // Throws the out-of-memory error.
 static void ThrowOutOfMemory(JNIEnv* env) {
-  jclass cls = env->FindClass("java/lang/OutOfMemoryError");
-  env->ThrowNew(cls, "out of memory");
+  env->ThrowNew(cls_outofmemory, "out of memory");
 }
 
 // Throws the null pointer exception.
 static void ThrowNullPointer(JNIEnv* env) {
-  jclass cls = env->FindClass("java/lang/NullPointerException");
-  env->ThrowNew(cls, "null object");
+  env->ThrowNew(cls_nullpointer, "null object");
 }
 
 // Throws the illegal argument exception.
 static void ThrowIllegalArgument(JNIEnv* env, const char* msg) {
-  jclass cls = env->FindClass("java/lang/IllegalArgumentException");
-  env->ThrowNew(cls, msg);
+  env->ThrowNew(cls_illegalargument, msg);
 }
 
 // Creates a new string.
@@ -80,43 +176,30 @@ static jbyteArray NewByteArray(JNIEnv* env, std::string_view str) {
 
 // Creates a new status object.
 static jobject NewStatus(JNIEnv* env, const tkrzw::Status& status) {
-  const char* const code_name = tkrzw::Status::CodeName(status.GetCode());
-  jclass cls_code = env->FindClass("tkrzw/Status$Code");
-  jfieldID id_code = env->GetStaticFieldID(cls_code, code_name, "Ltkrzw/Status$Code;");
-  jobject jcode = env->GetStaticObjectField(cls_code, id_code);
-  jstring jmessage = NewString(env, status.GetMessage().c_str());
-  jclass cls_status = env->FindClass("tkrzw/Status");
-  jmethodID id_init = env->GetMethodID(
-      cls_status, "<init>", "(Ltkrzw/Status$Code;Ljava/lang/String;)V");
-  jobject jstatus = env->NewObject(cls_status, id_init, jcode, jmessage);
-  env->DeleteLocalRef(jmessage);
-  env->DeleteLocalRef(jcode);
+  jobject jcode = obj_status_codes[(int)status.GetCode()];
+  jstring jmessage = status.HasMessage() ?
+      NewString(env, status.GetMessage().c_str()) : obj_str_empty;
+  jobject jstatus = env->NewObject(cls_status, id_status_init, jcode, jmessage);
   return jstatus;
 }
 
 // Sets the content a status object.
 static void SetStatus(JNIEnv* env, const tkrzw::Status& status, jobject jstatus) {
-  const char* const code_name = tkrzw::Status::CodeName(status.GetCode());
-  jclass cls_code = env->FindClass("tkrzw/Status$Code");
-  jfieldID id_code = env->GetStaticFieldID(cls_code, code_name, "Ltkrzw/Status$Code;");
-  jobject jcode = env->GetStaticObjectField(cls_code, id_code);
-  jstring jmessage = NewString(env, status.GetMessage().c_str());
-  jclass cls_status = env->GetObjectClass(jstatus);
-  jmethodID id_set = env->GetMethodID(
-      cls_status, "set", "(Ltkrzw/Status$Code;Ljava/lang/String;)V");
-  env->CallVoidMethod(jstatus, id_set, jcode, jmessage);
-  env->DeleteLocalRef(jmessage);
-  env->DeleteLocalRef(jcode);
+  jobject jcode = obj_status_codes[(int)status.GetCode()];
+  jstring jmessage = status.HasMessage() ?
+      NewString(env, status.GetMessage().c_str()) : obj_str_empty;
+
+
+
+
+  env->CallVoidMethod(jstatus, id_status_set, jcode, jmessage);
 }
 
 // Throws the status exception.
 static void ThrowStatus(JNIEnv* env, const tkrzw::Status& status) {
   jobject jstatus = NewStatus(env, status);
-  jclass cls_status_ex = env->FindClass("tkrzw/StatusException");
-  jmethodID id_init = env->GetMethodID(cls_status_ex, "<init>", "(Ltkrzw/Status;)V");
-  jthrowable jstatus_ex = (jthrowable)env->NewObject(cls_status_ex, id_init, jstatus);
-  env->DeleteLocalRef(jstatus);
-  env->Throw(jstatus_ex);
+  jthrowable jstatusex = (jthrowable)env->NewObject(cls_statusex, id_statusex_init, jstatus);
+  env->Throw(jstatusex);
 }
 
 // Wrapper to treat a Java string as a C++ string.
@@ -189,92 +272,59 @@ class SoftByteArray {
 
 // Gets the DBM pointer of the Java DBM object.
 static tkrzw::ParamDBM* GetDBM(JNIEnv* env, jobject jdbm) {
-  jclass cls_dbm = env->GetObjectClass(jdbm);
-  jfieldID id_dbm_ptr = env->GetFieldID(cls_dbm, "ptr_", "J");
   return (tkrzw::ParamDBM*)(intptr_t)env->GetLongField(jdbm, id_dbm_ptr);
 }
 
 // Sets the DBM pointer of the Java DBM object.
 static void SetDBM(JNIEnv* env, jobject jdbm, tkrzw::ParamDBM* dbm) {
-  jclass cls_dbm = env->GetObjectClass(jdbm);
-  jfieldID id_dbm_ptr = env->GetFieldID(cls_dbm, "ptr_", "J");
   env->SetLongField(jdbm, id_dbm_ptr, (intptr_t)dbm);
 }
 
 // Gets the iterator pointer of the Java iterator object.
 static tkrzw::DBM::Iterator* GetIter(JNIEnv* env, jobject jiter) {
-  jclass cls_iter = env->GetObjectClass(jiter);
-  jfieldID id_iter_ptr = env->GetFieldID(cls_iter, "ptr_", "J");
-  return (tkrzw::DBM::Iterator*)(intptr_t)env->GetLongField(jiter, id_iter_ptr);
+  return (tkrzw::DBM::Iterator*)(intptr_t)env->GetLongField(jiter, id_dbmiter_ptr);
 }
 
 // Sets the iterator pointer of the Java iterator object.
 static void SetIter(JNIEnv* env, jobject jiter, tkrzw::DBM::Iterator* iter) {
-  jclass cls_iter = env->GetObjectClass(jiter);
-  jfieldID id_iter_ptr = env->GetFieldID(cls_iter, "ptr_", "J");
-  env->SetLongField(jiter, id_iter_ptr, (intptr_t)iter);
+  env->SetLongField(jiter, id_dbmiter_ptr, (intptr_t)iter);
 }
 
 // Gets the file pointer of the Java text file object.
 static tkrzw::PolyFile* GetFile(JNIEnv* env, jobject jfile) {
-  jclass cls_file = env->GetObjectClass(jfile);
-  jfieldID id_file_ptr = env->GetFieldID(cls_file, "ptr_", "J");
   return (tkrzw::PolyFile*)(intptr_t)env->GetLongField(jfile, id_file_ptr);
 }
 
 // Sets the file pointer of the Java text file object.
 static void SetFile(JNIEnv* env, jobject jfile, tkrzw::PolyFile* file) {
-  jclass cls_file = env->GetObjectClass(jfile);
-  jfieldID id_file_ptr = env->GetFieldID(cls_file, "ptr_", "J");
   env->SetLongField(jfile, id_file_ptr, (intptr_t)file);
 }
 
 // Converts a Java byte array map into a C++ string map.
 static std::map<std::string, std::string> JMapToCMap(JNIEnv* env, jobject jmap) {
   std::map<std::string, std::string> map;
-  jclass cls_map = env->GetObjectClass(jmap);
-  jmethodID id_entryset = env->GetMethodID(cls_map, "entrySet", "()Ljava/util/Set;");
-  jobject jset = env->CallObjectMethod(jmap, id_entryset);
-  jclass cls_set = env->GetObjectClass(jset);
-  jmethodID id_iterator = env->GetMethodID(cls_set, "iterator", "()Ljava/util/Iterator;");
-  jobject jiter = env->CallObjectMethod(jset, id_iterator);
-  jclass cls_iter = env->GetObjectClass(jiter);
-  jmethodID id_hasnext = env->GetMethodID(cls_iter, "hasNext", "()Z");
-  jmethodID id_next = env->GetMethodID(cls_iter, "next", "()Ljava/lang/Object;");
-  while (env->CallBooleanMethod(jiter, id_hasnext)) {
-    jobject jpair = env->CallObjectMethod(jiter, id_next);
-    jclass cls_pair = env->GetObjectClass(jpair);
-    jmethodID id_getkey = env->GetMethodID(cls_pair, "getKey", "()Ljava/lang/Object;");
-    jmethodID id_getvalue = env->GetMethodID(cls_pair, "getValue", "()Ljava/lang/Object;");
-    jbyteArray jkey = (jbyteArray)env->CallObjectMethod(jpair, id_getkey);
-    jbyteArray jvalue = (jbyteArray)env->CallObjectMethod(jpair, id_getvalue);
+  jobject jentryset = env->CallObjectMethod(jmap, id_map_entryset);
+  jobject jentrysetiter = env->CallObjectMethod(jentryset, id_set_iterator);
+  while (env->CallBooleanMethod(jentrysetiter, id_iter_hasnext)) {
+    jobject jmapentry = env->CallObjectMethod(jentrysetiter, id_iter_next);
+    jbyteArray jkey = (jbyteArray)env->CallObjectMethod(jmapentry, id_mapentry_getkey);
+    jbyteArray jvalue = (jbyteArray)env->CallObjectMethod(jmapentry, id_mapentry_getvalue);
     {
       SoftByteArray key(env, jkey);
       SoftByteArray value(env, jvalue);
       map.emplace(key.Get(), value.Get());
     }
-    env->DeleteLocalRef(jkey);
-    env->DeleteLocalRef(jvalue);
-    env->DeleteLocalRef(jpair);
   }
-  env->DeleteLocalRef(jiter);
-  env->DeleteLocalRef(jset);
   return map;
 }
 
 // Converts a C++ string map into a Java byte array map.
 static jobject CMapToJMap(JNIEnv* env, const std::map<std::string, std::string>& map) {
-  jclass cls_map = env->FindClass("java/util/HashMap");
-  jmethodID id_map_init = env->GetMethodID(cls_map, "<init>", "(I)V");
-  jmethodID id_map_put =  env->GetMethodID(
-      cls_map, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
-  jobject jmap = env->NewObject(cls_map, id_map_init, map.size() * 2 + 1);
+  jobject jmap = env->NewObject(cls_hashmap, id_hashmap_init, map.size() * 2 + 1);
   for (const auto& rec : map) {
     jbyteArray jkey = NewByteArray(env, rec.first);
     jbyteArray jvalue = NewByteArray(env, rec.second);
-    env->CallObjectMethod(jmap, id_map_put, jkey, jvalue);
-    env->DeleteLocalRef(jkey);
-    env->DeleteLocalRef(jvalue);
+    env->CallObjectMethod(jmap, id_hashmap_put, jkey, jvalue);
   }
   return jmap;
 }
@@ -282,49 +332,28 @@ static jobject CMapToJMap(JNIEnv* env, const std::map<std::string, std::string>&
 // Converts a Java string map into a C++ string map.
 static std::map<std::string, std::string> JMapStrToCMap(JNIEnv* env, jobject jmap) {
   std::map<std::string, std::string> map;
-  jclass cls_map = env->GetObjectClass(jmap);
-  jmethodID id_entryset = env->GetMethodID(cls_map, "entrySet", "()Ljava/util/Set;");
-  jobject jset = env->CallObjectMethod(jmap, id_entryset);
-  jclass cls_set = env->GetObjectClass(jset);
-  jmethodID id_iterator = env->GetMethodID(cls_set, "iterator", "()Ljava/util/Iterator;");
-  jobject jiter = env->CallObjectMethod(jset, id_iterator);
-  jclass cls_iter = env->GetObjectClass(jiter);
-  jmethodID id_hasnext = env->GetMethodID(cls_iter, "hasNext", "()Z");
-  jmethodID id_next = env->GetMethodID(cls_iter, "next", "()Ljava/lang/Object;");
-  while (env->CallBooleanMethod(jiter, id_hasnext)) {
-    jobject jpair = env->CallObjectMethod(jiter, id_next);
-    jclass cls_pair = env->GetObjectClass(jpair);
-    jmethodID id_getkey = env->GetMethodID(cls_pair, "getKey", "()Ljava/lang/Object;");
-    jmethodID id_getvalue = env->GetMethodID(cls_pair, "getValue", "()Ljava/lang/Object;");
-    jstring jkey = (jstring)env->CallObjectMethod(jpair, id_getkey);
-    jstring jvalue = (jstring)env->CallObjectMethod(jpair, id_getvalue);
+  jobject jentryset = env->CallObjectMethod(jmap, id_map_entryset);
+  jobject jentrysetiter = env->CallObjectMethod(jentryset, id_set_iterator);
+  while (env->CallBooleanMethod(jentrysetiter, id_iter_hasnext)) {
+    jobject jmapentry = env->CallObjectMethod(jentrysetiter, id_iter_next);
+    jstring jkey = (jstring)env->CallObjectMethod(jmapentry, id_mapentry_getkey);
+    jstring jvalue = (jstring)env->CallObjectMethod(jmapentry, id_mapentry_getvalue);
     {
       SoftString key(env, jkey);
       SoftString value(env, jvalue);
       map.emplace(key.Get(), value.Get());
     }
-    env->DeleteLocalRef(jkey);
-    env->DeleteLocalRef(jvalue);
-    env->DeleteLocalRef(jpair);
   }
-  env->DeleteLocalRef(jiter);
-  env->DeleteLocalRef(jset);
   return map;
 }
 
 // Converts a C++ string map into a Java string map.
 static jobject CMapToJMapStr(JNIEnv* env, const std::map<std::string, std::string>& map) {
-  jclass cls_map = env->FindClass("java/util/HashMap");
-  jmethodID id_map_init = env->GetMethodID(cls_map, "<init>", "(I)V");
-  jmethodID id_map_put =  env->GetMethodID(
-      cls_map, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
-  jobject jmap = env->NewObject(cls_map, id_map_init, map.size() * 2 + 1);
+  jobject jmap = env->NewObject(cls_hashmap, id_hashmap_init, map.size() * 2 + 1);
   for (const auto& rec : map) {
     jstring jkey = NewString(env, rec.first.c_str());
     jstring jvalue = NewString(env, rec.second.c_str());
-    env->CallObjectMethod(jmap, id_map_put, jkey, jvalue);
-    env->DeleteLocalRef(jkey);
-    env->DeleteLocalRef(jvalue);
+    env->CallObjectMethod(jmap, id_hashmap_put, jkey, jvalue);
   }
   return jmap;
 }
@@ -333,26 +362,15 @@ static jobject CMapToJMapStr(JNIEnv* env, const std::map<std::string, std::strin
 static std::vector<std::pair<std::string_view, std::string_view>> ExtractSVPairs(
     JNIEnv* env, jobject jmap, std::vector<std::string>* placeholder) {
   std::vector<std::pair<std::string_view, std::string_view>> result;
-  jclass cls_map = env->GetObjectClass(jmap);
-  jmethodID id_entryset = env->GetMethodID(cls_map, "entrySet", "()Ljava/util/Set;");
-  jmethodID id_size = env->GetMethodID(cls_map, "size", "()I");
-  jobject jset = env->CallObjectMethod(jmap, id_entryset);
-  jclass cls_set = env->GetObjectClass(jset);
-  jmethodID id_iterator = env->GetMethodID(cls_set, "iterator", "()Ljava/util/Iterator;");
-  jobject jiter = env->CallObjectMethod(jset, id_iterator);
-  jclass cls_iter = env->GetObjectClass(jiter);
-  jmethodID id_hasnext = env->GetMethodID(cls_iter, "hasNext", "()Z");
-  jmethodID id_next = env->GetMethodID(cls_iter, "next", "()Ljava/lang/Object;");
-  jint map_size = env->CallIntMethod(jmap, id_size);
+  jobject jentryset = env->CallObjectMethod(jmap, id_map_entryset);
+  jobject jentrysetiter = env->CallObjectMethod(jentryset, id_set_iterator);
+  jint map_size = env->CallIntMethod(jmap, id_map_size);
   result.reserve(map_size);
   placeholder->reserve(map_size * 2);
-  while (env->CallBooleanMethod(jiter, id_hasnext)) {
-    jobject jpair = env->CallObjectMethod(jiter, id_next);
-    jclass cls_pair = env->GetObjectClass(jpair);
-    jmethodID id_getkey = env->GetMethodID(cls_pair, "getKey", "()Ljava/lang/Object;");
-    jmethodID id_getvalue = env->GetMethodID(cls_pair, "getValue", "()Ljava/lang/Object;");
-    jbyteArray jkey = (jbyteArray)env->CallObjectMethod(jpair, id_getkey);
-    jbyteArray jvalue = (jbyteArray)env->CallObjectMethod(jpair, id_getvalue);
+  while (env->CallBooleanMethod(jentrysetiter, id_iter_hasnext)) {
+    jobject jmapentry = env->CallObjectMethod(jentrysetiter, id_iter_next);
+    jbyteArray jkey = (jbyteArray)env->CallObjectMethod(jmapentry, id_mapentry_getkey);
+    jbyteArray jvalue = (jbyteArray)env->CallObjectMethod(jmapentry, id_mapentry_getvalue);
     {
       SoftByteArray key(env, jkey);
       placeholder->emplace_back(std::string(key.Get()));
@@ -365,12 +383,7 @@ static std::vector<std::pair<std::string_view, std::string_view>> ExtractSVPairs
       }
       result.emplace_back(std::make_pair(key_view, value_view));
     }
-    env->DeleteLocalRef(jkey);
-    env->DeleteLocalRef(jvalue);
-    env->DeleteLocalRef(jpair);
   }
-  env->DeleteLocalRef(jiter);
-  env->DeleteLocalRef(jset);
   return result;
 }
 
@@ -647,18 +660,12 @@ JNIEXPORT jobject JNICALL Java_tkrzw_DBM_setAndGet
   tkrzw::Status status = dbm->Process(key.Get(), &proc, true);
   status |= impl_status;
   jobject jstatus = NewStatus(env, status);
-  jclass cls_andvalue = env->FindClass("tkrzw/Status$AndValue");
-  jmethodID id_init = env->GetMethodID(cls_andvalue, "<init>", "()V");
-  jobject jandvalue = env->NewObject(cls_andvalue, id_init);
-  jfieldID id_status = env->GetFieldID(cls_andvalue, "status", "Ltkrzw/Status;");
-  env->SetObjectField(jandvalue, id_status, jstatus);
+  jobject jandvalue = env->NewObject(cls_status_andvalue, id_status_andvalue_init);
+  env->SetObjectField(jandvalue, id_status_andvalue_status, jstatus);
   if (hit) {
-    jfieldID id_value = env->GetFieldID(cls_andvalue, "value", "Ljava/lang/Object;");
     jbyteArray jold_value = NewByteArray(env, old_value);
-    env->SetObjectField(jandvalue, id_value, jold_value);
-    env->DeleteLocalRef(jold_value);
+    env->SetObjectField(jandvalue, id_status_andvalue_value, jold_value);
   }
-  env->DeleteLocalRef(jstatus);
   return jandvalue;
 }
 
@@ -738,18 +745,12 @@ JNIEXPORT jobject JNICALL Java_tkrzw_DBM_removeAndGet
   tkrzw::Status status = dbm->Process(key.Get(), &proc, true);
   status |= impl_status;
   jobject jstatus = NewStatus(env, status);
-  jclass cls_andvalue = env->FindClass("tkrzw/Status$AndValue");
-  jmethodID id_init = env->GetMethodID(cls_andvalue, "<init>", "()V");
-  jobject jandvalue = env->NewObject(cls_andvalue, id_init);
-  jfieldID id_status = env->GetFieldID(cls_andvalue, "status", "Ltkrzw/Status;");
-  env->SetObjectField(jandvalue, id_status, jstatus);
+  jobject jandvalue = env->NewObject(cls_status_andvalue, id_status_andvalue_init);
+  env->SetObjectField(jandvalue, id_status_andvalue_status, jstatus);
   if (status == tkrzw::Status::SUCCESS) {
-    jfieldID id_value = env->GetFieldID(cls_andvalue, "value", "Ljava/lang/Object;");
     jbyteArray jold_value = NewByteArray(env, old_value);
-    env->SetObjectField(jandvalue, id_value, jold_value);
-    env->DeleteLocalRef(jold_value);
+    env->SetObjectField(jandvalue, id_status_andvalue_value, jold_value);
   }
-  env->DeleteLocalRef(jstatus);
   return jandvalue;
 }
 
@@ -1121,12 +1122,10 @@ JNIEXPORT jobjectArray JNICALL Java_tkrzw_DBM_search
     ThrowStatus(env, status);
     return nullptr;
   }
-  jclass cls_byteary = env->FindClass("[B");
   jobjectArray jkeys = env->NewObjectArray(keys.size(), cls_byteary, nullptr);
   for (size_t i = 0; i < keys.size(); i++) {
     jbyteArray jkey = NewByteArray(env, keys[i]);
     env->SetObjectArrayElement(jkeys, i, jkey);
-    env->DeleteLocalRef(jkey);
   }
   return jkeys;
 }
@@ -1134,9 +1133,7 @@ JNIEXPORT jobjectArray JNICALL Java_tkrzw_DBM_search
 // Implementation of DBM#makeIterator.
 JNIEXPORT jobject JNICALL Java_tkrzw_DBM_makeIterator
 (JNIEnv* env, jobject jself) {
-  jclass cls_iter = env->FindClass("tkrzw/Iterator");
-  jmethodID id_init = env->GetMethodID(cls_iter, "<init>", "(Ltkrzw/DBM;)V");
-  return env->NewObject(cls_iter, id_init, jself);
+  return env->NewObject(cls_dbmiter, id_dbmiter_init, jself);
 }
 
 // Implementation of DBM#toString.
@@ -1310,14 +1307,11 @@ JNIEXPORT jobjectArray JNICALL Java_tkrzw_Iterator_get
     SetStatus(env, status, jstatus);
   }
   if (status == tkrzw::Status::SUCCESS) {
-    jclass cls_byteary = env->FindClass("[B");
     jobjectArray jrec = env->NewObjectArray(2, cls_byteary, nullptr);
     jbyteArray jkey = NewByteArray(env, key);
     jbyteArray jvalue = NewByteArray(env, value);
     env->SetObjectArrayElement(jrec, 0, jkey);
     env->SetObjectArrayElement(jrec, 1, jvalue);
-    env->DeleteLocalRef(jvalue);
-    env->DeleteLocalRef(jkey);
     return jrec;
   }
   return nullptr;
@@ -1623,12 +1617,10 @@ JNIEXPORT jobjectArray JNICALL Java_tkrzw_File_search
     ThrowStatus(env, status);
     return nullptr;
   }
-  jclass cls_byteary = env->FindClass("[B");
   jobjectArray jlines = env->NewObjectArray(lines.size(), cls_byteary, nullptr);
   for (size_t i = 0; i < lines.size(); i++) {
     jbyteArray jline = NewByteArray(env, lines[i]);
     env->SetObjectArrayElement(jlines, i, jline);
-    env->DeleteLocalRef(jline);
   }
   return jlines;
 }
