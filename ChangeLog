@@ -3,6 +3,7 @@
 	- Release: 0.1.18
 
 	- Add Join method to Status.
+	- Cache accessor to classes, methods and fields.
 
 2021-07-28  Mikio Hirabayashi  <hirarin@gmail.com>
 
