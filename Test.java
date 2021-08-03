@@ -77,6 +77,13 @@ public class Test {
       } finally {
         removeDirectory(tmp_dir_path);
       }
+    } else if (args[0].equals("asyncdbm")) {
+      String tmp_dir_path = createTempDir();
+      try {
+        rv = runAsyncDBM(tmp_dir_path);
+      } finally {
+        removeDirectory(tmp_dir_path);
+      }
     } else if (args[0].equals("file")) {
       String tmp_dir_path = createTempDir();
       try {
@@ -158,7 +165,9 @@ public class Test {
     STDERR.printf("  thread\n");
     STDERR.printf("  iter\n");
     STDERR.printf("  search\n");
-    STDERR.printf("  text\n");
+    STDERR.printf("  export\n");
+    STDERR.printf("  asyncdbm\n");
+    STDERR.printf("  file\n");
     STDERR.printf("  perf [--path num] [--iter num] [--threads num] [--params expr] [--random]\n");
     STDERR.printf("\n");
     System.exit(1);
@@ -380,11 +389,19 @@ public class Test {
       for (int i = 0; i < 20; i++) {
         String key = String.format("%08d", i);
         String value = String.format("%d", i);
-        check(dbm.set(key, value, false).equals(Status.SUCCESS));
+        if (i % 3 == 0) {
+          check(dbm.set(key, value, false).equals(Status.SUCCESS));
+        } else {
+          check(dbm.set(key.getBytes(), value.getBytes(), false).equals(Status.SUCCESS));
+        }
       }
       for (int i = 0; i < 20; i += 2) {
         String key = String.format("%08d", i);
-        check(dbm.remove(key).equals(Status.SUCCESS));
+        if (i % 3 == 0) {
+          check(dbm.remove(key).equals(Status.SUCCESS));
+        } else {
+          check(dbm.remove(key.getBytes()).equals(Status.SUCCESS));
+        }
       }
       check(dbm.synchronize(false, synchronize_params).equals(Status.SUCCESS));
       check(dbm.count() == 10);
@@ -411,7 +428,7 @@ public class Test {
           check(status.equals(Status.DUPLICATION_ERROR));
         }
       }
-      Status.AndValue<String> sv = dbm.setAndGet("98765", "apple", false);
+      Status.And<String> sv = dbm.setAndGet("98765", "apple", false);
       check(sv.status.equals(Status.SUCCESS));
       check(sv.value == null);
       if (class_name.equals("HashDBM") || class_name.equals("TreeDBM") ||
@@ -586,7 +603,7 @@ public class Test {
           "one", "first", "two", "second", "three", "third");
       check(export_dbm.setMultiStr(multi_records, true).equals(Status.SUCCESS));
       multi_records = Map.of("two", "2", "three", "3");
-      check(export_dbm.appendMultiStr(multi_records, ":").equals(Status.SUCCESS));
+      check(export_dbm.appendMulti(multi_records, ":").equals(Status.SUCCESS));
       String[] multi_keys = {"one", "two", "three", "four"};
       multi_records = export_dbm.getMulti(multi_keys);
       check(multi_records.get("one").equals("first"));
@@ -603,6 +620,29 @@ public class Test {
       check(status.equals(Status.NOT_FOUND_ERROR));
       check(export_dbm.get("four", status) == null);
       check(status.equals(Status.NOT_FOUND_ERROR));
+      Map<byte[], byte[]> raw_multi_records =
+          Map.of("one".getBytes(), "first".getBytes(),
+                 "two".getBytes(), "second".getBytes(),
+                 "three".getBytes(), "third".getBytes());
+      check(export_dbm.setMulti(raw_multi_records, false).equals(Status.SUCCESS));
+      raw_multi_records =
+          Map.of("two".getBytes(), "2".getBytes(),
+                 "three".getBytes(), "3".getBytes());
+      check(export_dbm.appendMulti(raw_multi_records, ":".getBytes()).equals(Status.SUCCESS));
+      byte[][] raw_multi_keys =
+          {"one".getBytes(), "two".getBytes(), "three".getBytes(), "four".getBytes()};
+      raw_multi_records = export_dbm.getMulti(raw_multi_keys);
+      multi_records.clear();
+      for (Map.Entry<byte[], byte[]> raw_record : raw_multi_records.entrySet()) {
+        multi_records.put(new String(raw_record.getKey()), new String(raw_record.getValue()));
+      }
+      check(multi_records.get("one").equals("first"));
+      check(multi_records.get("two").equals("second:2"));
+      check(multi_records.get("three").equals("third:3"));
+      byte[][] raw_multi_keys_remove =
+          {"one".getBytes(), "two".getBytes(), "three".getBytes()};
+      check(export_dbm.removeMulti(raw_multi_keys_remove).equals(Status.SUCCESS));
+      check(export_dbm.count() == 1);
       check(export_dbm.close().equals(Status.SUCCESS));
       export_dbm.destruct();
       iter.destruct();
@@ -947,6 +987,151 @@ public class Test {
     }
     check(file.close().equals(Status.Code.SUCCESS));
     file.destruct();
+    STDOUT.printf("  ... OK\n");
+    return 0;
+  }
+
+  /**
+   * Runs the export test.
+   */
+  private static int runAsyncDBM(String tmp_dir_path) {
+    STDOUT.printf("Running export tests:\n");
+    String path = tmp_dir_path + java.io.File.separatorChar + "casket.tkh";
+    String copy_path = tmp_dir_path + java.io.File.separatorChar + "casket-copy.tkh";
+    DBM dbm = new DBM();
+    check(dbm.open(path, true, "num_buckets=100").equals(Status.SUCCESS));
+    AsyncDBM async = new AsyncDBM(dbm, 4);
+    check(async.toString().indexOf("AsyncDBM") >= 0);
+    Future<Status> future = async.set("one", "hop", true);
+    check(future.toString().indexOf("Future") >= 0);
+    future.await(0);
+    check(future.await(1));
+    check(future.get().equals(Status.SUCCESS));
+    check(async.set("two".getBytes(), "step".getBytes(), true).get().equals(Status.SUCCESS));
+    check(async.set("three".getBytes(), "jump".getBytes()).get().equals(Status.SUCCESS));
+    check(dbm.count() == 3);
+    check(async.append("one".getBytes(), "1".getBytes(), ":".getBytes())
+          .get().equals(Status.SUCCESS));
+    check(async.append("two", "2", ":").get().equals(Status.SUCCESS));
+    Future<Status.And<String>> get_str_future = async.get("one");
+    Status.And<String> get_str_result = get_str_future.get();
+    check(get_str_result.status.equals(Status.SUCCESS));
+    check(get_str_result.value.equals("hop:1"));
+    Future<Status.And<byte[]>> get_raw_future = async.get("two".getBytes());
+    Status.And<byte[]> get_raw_result = get_raw_future.get();
+    check(get_raw_result.status.equals(Status.SUCCESS));
+    check(Arrays.equals(get_raw_result.value, "step:2".getBytes()));
+    future = async.set("one", "hop", true);
+    check(future.toString().indexOf("Future") >= 0);
+    future.await(0);
+    check(future.await(1));
+    check(future.get().equals(Status.SUCCESS));
+    check(async.set("two".getBytes(), "hop".getBytes(), true).get().equals(Status.SUCCESS));
+    check(async.set("three".getBytes(), "jump".getBytes()).get().equals(Status.SUCCESS));
+    check(dbm.count() == 3);
+    check(async.remove("one").get().equals(Status.SUCCESS));
+    check(async.remove("two".getBytes()).get().equals(Status.SUCCESS));
+    check(async.remove("three".getBytes()).get().equals(Status.SUCCESS));
+    check(dbm.count() == 0);
+    Map<String, String> str_records = Map.of("one", "hop", "two", "step", "three", "jump");
+    check(async.setMultiStr(str_records, false).get().equals(Status.SUCCESS));
+    check(dbm.count() == 3);
+    str_records = Map.of("one", "1", "two", "2", "three", "3");
+    check(async.appendMulti(str_records, ":").get().equals(Status.SUCCESS));
+    String[] str_keys = {"one", "two", "three"};
+    Future<Status.And<Map<String, String>>> get_multi_str_future = async.getMulti(str_keys);
+    Status.And<Map<String, String>> get_multi_str_result = get_multi_str_future.get();
+    check(get_multi_str_result.status.equals(Status.SUCCESS));
+    str_records = get_multi_str_result.value;
+    check(str_records.size() == 3);
+    check(str_records.get("one").equals("hop:1"));
+    check(str_records.get("two").equals("step:2"));
+    check(str_records.get("three").equals("jump:3"));
+    check(async.removeMulti(str_keys).get().equals(Status.SUCCESS));
+    check(dbm.count() == 0);
+    Map<byte[], byte[]> raw_records = Map.of(
+        "one".getBytes(), "hop".getBytes(), "two".getBytes(), "step".getBytes(),
+        "three".getBytes(), "jump".getBytes());
+    check(async.setMulti(raw_records, false).get().equals(Status.SUCCESS));
+    check(dbm.count() == 3);
+    raw_records = Map.of(
+        "one".getBytes(), "1".getBytes(), "two".getBytes(), "2".getBytes(),
+        "three".getBytes(), "3".getBytes());
+    check(async.appendMulti(raw_records, ":".getBytes()).get().equals(Status.SUCCESS));
+    byte[][] raw_keys = {"one".getBytes(), "two".getBytes(), "three".getBytes()};
+    Future<Status.And<Map<byte[], byte[]>>> get_multi_raw_future = async.getMulti(raw_keys);
+    Status.And<Map<byte[], byte[]>> get_multi_raw_result = get_multi_raw_future.get();
+    check(get_multi_raw_result.status.equals(Status.SUCCESS));
+    str_records.clear();
+    for (Map.Entry<byte[], byte[]> raw_record : get_multi_raw_result.value.entrySet()) {
+      str_records.put(new String(raw_record.getKey()), new String(raw_record.getValue()));
+    }
+    check(str_records.size() == 3);
+    check(str_records.get("one").equals("hop:1"));
+    check(str_records.get("two").equals("step:2"));
+    check(str_records.get("three").equals("jump:3"));
+    check(async.removeMulti(raw_keys).get().equals(Status.SUCCESS));
+    check(dbm.count() == 0);
+    check(async.compareExchange("japan", null, "tokyo").get().equals(Status.SUCCESS));
+    check(async.compareExchange("japan", "tokyo", "kyoto").get().equals(Status.SUCCESS));
+    check(dbm.get("japan").equals("kyoto"));
+    check(async.compareExchange("japan", "kyoto", null).get().equals(Status.SUCCESS));
+    check(dbm.count() == 0);
+    check(async.compareExchangeMultiStr(
+        makeStrMap("one", null, "two", null),
+        makeStrMap("one", "1", "two", "2")).get().equals(Status.SUCCESS));
+    check(async.compareExchangeMultiStr(
+        makeStrMap("one", "1", "two", "2"),
+        makeStrMap("one", "11", "two", "22")).get().equals(Status.SUCCESS));
+    check(dbm.get("one").equals("11"));
+    check(dbm.get("two").equals("22"));
+    check(async.compareExchangeMultiStr(
+        makeStrMap("one", "11", "two", "22"),
+        makeStrMap("one", null, "two", null)).get().equals(Status.SUCCESS));
+    check(dbm.count() == 0);
+    Future<Status.And<Long>> incr_future = async.increment("num", 5, 100);
+    Status.And<Long> incr_result = incr_future.get();
+    check(incr_result.status.equals(Status.SUCCESS));
+    check(incr_result.value.longValue() == 105);
+    check(async.increment("num", 5, 100).get().value.longValue() == 110);
+    check(async.rebuild().get().equals(Status.SUCCESS));
+    check(async.synchronize(false).get().equals(Status.SUCCESS));
+    check(async.copyFileData(copy_path).get().equals(Status.SUCCESS));
+    check(async.clear().get().equals(Status.SUCCESS));
+    check(dbm.count() == 0);
+    DBM copy_dbm = new DBM();
+    check(copy_dbm.open(copy_path, true).equals(Status.SUCCESS));
+    check(copy_dbm.count() == 1);
+    check(copy_dbm.clear().equals(Status.SUCCESS));
+    check(dbm.set("tako", "ika").equals(Status.SUCCESS));
+    check(async.export(copy_dbm).get().equals(Status.SUCCESS));
+    check(copy_dbm.get("tako").equals("ika"));
+    check(copy_dbm.close().equals(Status.SUCCESS));
+    copy_dbm.destruct();
+    File copy_file = new File();
+    check(copy_file.open(copy_path, true, "truncate=true").equals(Status.SUCCESS));
+    check(async.exportToFlatRecords(copy_file).get().equals(Status.SUCCESS));
+    check(async.clear().get().equals(Status.SUCCESS));
+    check(dbm.count() == 0);
+    check(async.importFromFlatRecords(copy_file).get().equals(Status.SUCCESS));
+    check(dbm.count() == 1);
+    check(dbm.set("tako", "ika").equals(Status.SUCCESS));
+    check(copy_file.close().equals(Status.SUCCESS));
+    copy_file.destruct();
+    check(dbm.set("hello", "bood-bye").equals(Status.SUCCESS));
+    check(dbm.set("hi", "bye").equals(Status.SUCCESS));
+    check(dbm.set("chao", "adios").equals(Status.SUCCESS));
+    Future<Status.And<String[]>> search_str_future = async.search("begin", "h", 0);
+    Status.And<String[]> search_str_result = search_str_future.get();
+    check(search_str_result.status.equals(Status.SUCCESS));
+    check(search_str_result.value.length == 2);
+    Future<Status.And<byte[][]>> search_raw_future = async.search("begin", "h".getBytes(), 0);
+    Status.And<byte[][]> search_raw_result = search_raw_future.get();
+    check(search_raw_result.status.equals(Status.SUCCESS));
+    check(search_raw_result.value.length == 2);
+    async.destruct();
+    check(dbm.close().equals(Status.Code.SUCCESS));
+    dbm.destruct();
     STDOUT.printf("  ... OK\n");
     return 0;
   }

@@ -199,7 +199,7 @@ public class Status {
   /**
    * Container of a status and another arbitrary object.
    */
-  public static class AndValue<T> {
+  public static class And<T> {
     /** The status object. */
     public Status status;
     /** The value object. */

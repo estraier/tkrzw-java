@@ -192,6 +192,48 @@ public class Example2 {
 }
 </pre>
 
+<p>The following code is a typical example of the asynchronous API.  The AsyncDBM class manages a thread pool and handles database operations in the background in parallel.  Each Method of AsyncDBM returns a Future object to monitor the result.</p>
+
+<pre style="margin: 0em 0.8em; padding: 0.3em; background: #f8f8f8 none; border: 1px solid #dddddd; font-size: 90%;">import tkrzw.*;
+
+public class Example3 {
+  public static void main(String[] args) {
+    // Prepares the database.
+    DBM dbm = new DBM();
+    dbm.open("casket.tkh", true, "truncate=True,num_buckets=100");
+
+    // Prepares the asynchronous adapter with 4 worker threads.
+    AsyncDBM async= new AsyncDBM(dbm, 4);
+
+    // Executes the Set method asynchronously.
+    Future&lt;Status&gt; set_future = async.set("hello", "world");
+    // Does something in the foreground.
+    System.out.println("Setting a record");
+    // Checks the result after awaiting the set operation.
+    Status status = set_future.get();
+    if (!status.isOK()) {
+      System.out.println("ERROR: " + status.toString());
+    }
+
+    // Executes the get method asynchronously.
+    Future&lt;Status.And&lt;String&gt;&gt; get_future = async.get("hello");
+    // Does something in the foreground.
+    System.out.println("Getting a record");
+    // Checks the result after awaiting the get operation.
+    Status.And&lt;String&gt; get_result = get_future.get();
+    if (get_result.status.isOK()) {
+      System.out.println("VALUE: " + get_result.value);
+    }
+
+    // Releases the asynchronous adapter.
+    async.destruct();
+
+    // Closes the database.
+    dbm.close();
+  }
+}
+</pre>
+
 </body>
 
 </html>

@@ -205,13 +205,7 @@ public class DBM {
    * @param status The status object to store the result status.  If it is null, it is ignored.
    * @return The value data of the record or null on failure.
    */
-  public String get(String key, Status status) {
-    byte[] value = get(key.getBytes(StandardCharsets.UTF_8), status);
-    if (value == null) {
-      return null;
-    }
-    return new String(value, StandardCharsets.UTF_8);
-  }
+  public native String get(String key, Status status);
 
   /**
    * Gets the value of a record of a key, with string data, without status assignment.
@@ -234,20 +228,7 @@ public class DBM {
    * @param keys The keys of records to retrieve.
    * @return A map of retrieved records.  Keys which don't match existing records are ignored.
    */
-  public Map<String, String> getMulti(String[] keys) {
-    byte[][] rawKeys = new byte[keys.length][];
-    for (int i = 0; i < keys.length; i++) {
-      rawKeys[i] = keys[i].getBytes(StandardCharsets.UTF_8);
-    }
-    Map<byte[], byte[]> records = getMulti(rawKeys);
-    Map<String, String> strRecords = new HashMap<String, String>();
-    for (Map.Entry<byte[], byte[]> record : records.entrySet()) {
-      strRecords.put(
-          new String(record.getKey(), StandardCharsets.UTF_8),
-          new String(record.getValue(), StandardCharsets.UTF_8));
-    }
-    return strRecords;
-  }
+  public native Map<String, String> getMulti(String[] keys);
 
   /**
    * Sets a record of a key and a value.
@@ -256,7 +237,7 @@ public class DBM {
    * @param overwrite Whether to overwrite the existing value if there's a record with the same
    * key.  If true, the existing value is overwritten by the new value.  If false, the operation
    * is given up and an error status is returned.
-   * @return The result status.
+   * @return The result status.  If overwriting is abandoned, DUPLICATION_ERROR is returned.
    */
   public native Status set(byte[] key, byte[] value, boolean overwrite);
 
@@ -279,10 +260,7 @@ public class DBM {
    * is given up and an error status is returned.
    * @return The result status.  If overwriting is abandoned, DUPLICATION_ERROR is returned.
    */
-  public Status set(String key, String value, boolean overwrite) {
-    return set(key.getBytes(StandardCharsets.UTF_8),
-               value.getBytes(StandardCharsets.UTF_8), overwrite);
-  }
+  public native Status set(String key, String value, boolean overwrite);
 
   /**
    * Sets a record of a key and a value, with string data, with overwriting.
@@ -314,14 +292,7 @@ public class DBM {
    * @return The result status.  If there are records avoiding overwriting, DUPLICATION_ERROR
    * is returned.
    */
-  public Status setMultiStr(Map<String, String> records, boolean overwrite) {
-    Map<byte[], byte[]> rawRecords = new HashMap<byte[], byte[]>();
-    for (Map.Entry<String, String> record : records.entrySet()) {
-      rawRecords.put(record.getKey().getBytes(StandardCharsets.UTF_8),
-                     record.getValue().getBytes(StandardCharsets.UTF_8));
-    }
-    return setMulti(rawRecords, overwrite);
-  }
+  public native Status setMultiStr(Map<String, String> records, boolean overwrite);
 
   /**
    * Sets a record and get the old value.
@@ -333,7 +304,7 @@ public class DBM {
    * @return The result status and the old value.  If the record has not existed when inserting
    * the new record, null is assigned as the value.
    */
-  public native Status.AndValue<byte[]> setAndGet(byte[] key, byte[] value, boolean overwrite);
+  public native Status.And<byte[]> setAndGet(byte[] key, byte[] value, boolean overwrite);
 
   /**
    * Sets a record and get the old value, with string data.
@@ -345,11 +316,11 @@ public class DBM {
    * @return The result status and the old value.  If the record has not existed when inserting
    * the new record, null is assigned as the value.
    */
-  public Status.AndValue<String> setAndGet(String key, String value, boolean overwrite) {
-    Status.AndValue<byte[]> result = setAndGet(
+  public Status.And<String> setAndGet(String key, String value, boolean overwrite) {
+    Status.And<byte[]> result = setAndGet(
         key.getBytes(StandardCharsets.UTF_8), value.getBytes(StandardCharsets.UTF_8),
         overwrite);
-    Status.AndValue<String> strResult = new Status.AndValue<String>();
+    Status.And<String> strResult = new Status.And<String>();
     strResult.status = result.status;
     if (result.value != null) {
       strResult.value = new String(result.value, StandardCharsets.UTF_8);
@@ -360,7 +331,7 @@ public class DBM {
   /**
    * Removes a record of a key.
    * @param key The key of the record.
-   * @return The result status.
+   * @return The result status.  If there's no matching record, NOT_FOUND_ERROR is returned.
    */
   public native Status remove(byte[] key);
 
@@ -369,9 +340,7 @@ public class DBM {
    * @param key The key of the record.
    * @return The result status.  If there's no matching record, NOT_FOUND_ERROR is returned.
    */
-  public Status remove(String key) {
-    return remove(key.getBytes(StandardCharsets.UTF_8));
-  }
+  public native Status remove(String key);
 
   /**
    * Removes records of keys.
@@ -383,15 +352,9 @@ public class DBM {
   /**
    * Removes records of keys, with string data.
    * @param keys The keys of records to remove.
-   * @return The result status.
+   * @return The result status.  If there are missing records, NOT_FOUND_ERROR is returned.
    */
-  public Status removeMulti(String[] keys) {
-    byte[][] rawKeys = new byte[keys.length][];
-    for (int i = 0; i < keys.length; i++) {
-      rawKeys[i] = keys[i].getBytes(StandardCharsets.UTF_8);
-    }
-    return removeMulti(rawKeys);
-  }
+  public native Status removeMulti(String[] keys);
 
   /**
    * Removes a record and get the value.
@@ -399,7 +362,7 @@ public class DBM {
    * @return The result status and the record value.  If the record does not exist, null is
    * assigned
    */
-  public native Status.AndValue<byte[]> removeAndGet(byte[] key);
+  public native Status.And<byte[]> removeAndGet(byte[] key);
 
   /**
    * Removes a record and get the value.
@@ -407,9 +370,9 @@ public class DBM {
    * @return The result status and the record value.  If the record does not exist, null is
    * assigned
    */
-  public Status.AndValue<String> removeAndGet(String key) {
-    Status.AndValue<byte[]> result = removeAndGet(key.getBytes(StandardCharsets.UTF_8));
-    Status.AndValue<String> strResult = new Status.AndValue<String>();
+  public Status.And<String> removeAndGet(String key) {
+    Status.And<byte[]> result = removeAndGet(key.getBytes(StandardCharsets.UTF_8));
+    Status.And<String> strResult = new Status.And<String>();
     strResult.status = result.status;
     if (result.value != null) {
       strResult.value = new String(result.value, StandardCharsets.UTF_8);
@@ -435,10 +398,7 @@ public class DBM {
    * @return The result status.
    * @note If there's no existing record, the value is set without the delimiter.
    */
-  public Status append(String key, String value, String delim) {
-    return append(key.getBytes(StandardCharsets.UTF_8), value.getBytes(StandardCharsets.UTF_8),
-                  delim.getBytes(StandardCharsets.UTF_8));
-  }
+  public native Status append(String key, String value, String delim);
 
   /**
    * Appends data to multiple records
@@ -456,14 +416,7 @@ public class DBM {
    * @return The result status.
    * @note If there's no existing record, the value is set without the delimiter.
    */
-  public Status appendMultiStr(Map<String, String> records, String delim) {
-    Map<byte[], byte[]> rawRecords = new HashMap<byte[], byte[]>();
-    for (Map.Entry<String, String> record : records.entrySet()) {
-      rawRecords.put(record.getKey().getBytes(StandardCharsets.UTF_8),
-                     record.getValue().getBytes(StandardCharsets.UTF_8));
-    }
-    return appendMulti(rawRecords, delim.getBytes(StandardCharsets.UTF_8));
-  }
+  public native Status appendMulti(Map<String, String> records, String delim);
 
   /**
    * Compares the value of a record and exchanges if the condition meets.
@@ -713,7 +666,7 @@ public class DBM {
    * @param capacity The maximum records to obtain.  0 means unlimited.
    * @return An array of keys matching the condition.
    */
-  public String[] search(String mode, String pattern, int capacity){
+  public String[] search(String mode, String pattern, int capacity) {
     byte[][] keys = search(mode, pattern.getBytes(StandardCharsets.UTF_8), capacity);
     String[] strKeys = new String[keys.length];
     for (int i = 0; i < keys.length; i++) {

@@ -5,16 +5,16 @@
 #================================================================
 
 # Package name
-AC_INIT([tkrzw-java], [0.1.18])
+AC_INIT([tkrzw-java], [0.1.19])
 
 # Package information
 MYLIBVER=0
-MYLIBREV=16
+MYLIBREV=17
 
 # Targets
 MYJARFILES="tkrzw.jar"
-MYJAVAFILES="Utility.java Status.java StatusException.java DBM.java Iterator.java File.java Test.java"
-MYHEADERFILES=" tkrzw_Utility.h tkrzw_DBM.h tkrzw_Iterator.h tkrzw_File.h"
+MYJAVAFILES="Utility.java Status.java Future.java StatusException.java DBM.java Iterator.java AsyncDBM.java File.java Test.java"
+MYHEADERFILES=" tkrzw_Utility.h tkrzw_Future.h tkrzw_DBM.h tkrzw_Iterator.h tkrzw_AsyncDBM.h tkrzw_File.h"
 MYLIBRARYFILES=""
 MYLIBOBJFILES="tkrzw.o"
 

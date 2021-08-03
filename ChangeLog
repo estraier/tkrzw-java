@@ -1,3 +1,10 @@
+2021-08-03  Mikio Hirabayashi  <hirarin@gmail.com>
+
+	- Release: 0.1.19
+
+	- Make some functions native.
+	- Add AsyncDBM class.
+
 2021-07-29  Mikio Hirabayashi  <hirarin@gmail.com>
 
 	- Release: 0.1.18
