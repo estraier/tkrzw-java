@@ -41,7 +41,7 @@ public class Future<T> {
    * depends on the operation which makes the future.  For DBM#Get, a tuple of the status and
    * the retrieved value is returned.  For DBM#Set and DBM#Remove, the status object itself is
    * returned.
-   * @note The internal resource is released by this method.  "Wait" and "Get" cannot be called after calling this method.
+   * @note The internal resource is released by this method.  "aait" and "get" cannot be called after calling this method.
    */
   public native T get();
 
