@@ -1005,7 +1005,7 @@ public class Test {
     Future<Status> future = async.set("one", "hop", true);
     check(future.toString().indexOf("Future") >= 0);
     future.await(0);
-    check(future.await(1));
+    check(future.await(-1));
     check(future.get().equals(Status.SUCCESS));
     check(async.set("two".getBytes(), "step".getBytes(), true).get().equals(Status.SUCCESS));
     check(async.set("three".getBytes(), "jump".getBytes()).get().equals(Status.SUCCESS));
@@ -1024,7 +1024,7 @@ public class Test {
     future = async.set("one", "hop", true);
     check(future.toString().indexOf("Future") >= 0);
     future.await(0);
-    check(future.await(1));
+    check(future.await(-1));
     check(future.get().equals(Status.SUCCESS));
     check(async.set("two".getBytes(), "hop".getBytes(), true).get().equals(Status.SUCCESS));
     check(async.set("three".getBytes(), "jump".getBytes()).get().equals(Status.SUCCESS));
