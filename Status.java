@@ -45,8 +45,10 @@ public class Status {
     DUPLICATION_ERROR(10),
     /** Error that internal data are broken. */
     BROKEN_DATA_ERROR(11),
+    /** Error caused by networking failure. */
+    NETWORK_ERROR(12),
     /** Generic error caused by the application logic. */
-    APPLICATION_ERROR(12);
+    APPLICATION_ERROR(13);
 
     /**
      * Constructor to set the ID value.
@@ -83,6 +85,8 @@ public class Status {
   public static final Code DUPLICATION_ERROR = Code.DUPLICATION_ERROR;
   /** Status code: Error that internal data are broken. */
   public static final Code BROKEN_DATA_ERROR = Code.BROKEN_DATA_ERROR;
+  /** Status code: Error caused by networking failure. */
+  public static final Code NETWORK_ERROR = Code.NETWORK_ERROR;
   /** Status code: Generic error caused by the application logic. */
   public static final Code APPLICATION_ERROR = Code.APPLICATION_ERROR;
 

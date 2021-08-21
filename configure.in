@@ -5,11 +5,11 @@
 #================================================================
 
 # Package name
-AC_INIT([tkrzw-java], [0.1.19])
+AC_INIT([tkrzw-java], [0.1.20])
 
 # Package information
 MYLIBVER=0
-MYLIBREV=17
+MYLIBREV=18
 
 # Targets
 MYJARFILES="tkrzw.jar"
@@ -169,14 +169,14 @@ AC_CHECK_LIB(tkrzw, main)
 # Necessary headers
 AC_CHECK_HEADER(stdlib.h, true, AC_MSG_ERROR([stdlib.h is required]))
 AC_CHECK_HEADER(stdint.h, true, AC_MSG_ERROR([stdint.h is required]))
-#AC_CHECK_HEADER(tkrzw_lib_common.h, true, AC_MSG_ERROR([tkrzw_lib_common.h is required]))
+AC_CHECK_HEADER(tkrzw_langc.h, true, AC_MSG_ERROR([tkrzw_langc.h is required]))
 AC_CHECK_HEADER(jni.h, true, AC_MSG_ERROR([jni.h is required]))
 
 # Checking the version of Tkrzw with pkg-config
 if type pkg-config >config.tmp 2>&1
 then
   printf 'checking Tkrzw by pkg-config... '
-  if pkg-config --atleast-version=0.8.7 tkrzw
+  if pkg-config --atleast-version=1.0.2 tkrzw
   then
     MYCPPFLAGS="$MYCPPFLAGS -I`pkg-config --variable=includedir tkrzw`"
     MYLDFLAGS="$MYLDFLAGS -L`pkg-config --variable=libdir tkrzw`"
