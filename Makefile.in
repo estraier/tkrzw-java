@@ -47,16 +47,6 @@ LDENV = LD_RUN_PATH=/lib:/usr/lib:$(LIBDIR):$(HOME)/lib:/usr/local/lib:@MYRUNPAT
 RUNENV = @MYLDLIBPATHENV@=.:/lib:/usr/lib:$(LIBDIR):$(HOME)/lib:/usr/local/lib:@MYRUNPATH@
 
 #================================================================
-# Suffix rules
-#================================================================
-
-.SUFFIXES :
-.SUFFIXES : .cc .o
-
-.cc.o :
-	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) $<
-
-#================================================================
 # Actions
 #================================================================
 
@@ -168,6 +158,16 @@ apidocclean :
 	rm -rf api-doc api-doc-tmp
 
 .PHONY : all clean install casket check apidoc apidocclean
+
+#================================================================
+# Suffix rules
+#================================================================
+
+.SUFFIXES :
+.SUFFIXES : .cc .o
+
+.cc.o :
+	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) $<
 
 #================================================================
 # Building binaries
