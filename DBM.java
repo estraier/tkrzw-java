@@ -533,6 +533,13 @@ public class DBM {
    * @return The result status.
    * @note The optional parameters are the same as the Open method.  Omitted tuning parameters
    * are kept the same or implicitly optimized.  If it is null, it is ignored.
+   * <p>In addition, HashDBM, TreeDBM, and SkipDBM supports the following parameters.
+   * <ul>
+   * <li>skip_broken_records (bool): If true, the operation continues even if there are broken
+   * records which can be skipped.
+   * <li>sync_hard (bool): If true, physical synchronization with the hardware is done before
+   * finishing the rebuilt file.
+   * </ul>
    */
   public native Status rebuild(Map<String, String> params);
 

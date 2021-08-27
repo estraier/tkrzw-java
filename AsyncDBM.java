@@ -317,8 +317,7 @@ public class AsyncDBM {
    * Rebuilds the entire database.
    * @param params Optional parameters.  If it is null, it is ignored.
    * @return The future for the result status.
-   * @note The optional parameters are the same as the Open method.  Omitted tuning parameters
-   * are kept the same or implicitly optimized.  If it is null, it is ignored.
+   * @note The parameters work in the same way as with DBM::rebuild.
    */
   public native Future<Status> rebuild(Map<String, String> params);
 
@@ -336,10 +335,7 @@ public class AsyncDBM {
    * logical synchronization with the file system.
    * @param params Optional parameters.  If it is null, it is ignored.
    * @return The future for the result status.
-   * @note Only SkipDBM uses the optional parameters.  The "merge" parameter specifies paths
-   * of databases to merge, separated by colon.  The "reducer" parameter specifies the reducer
-   * to apply to records of the same key.  "ReduceToFirst", "ReduceToSecond", "ReduceToLast",
-   * etc are supported.
+   * @note The parameters work in the same way as with DBM::synchronize.
    */
   public native Future<Status> synchronize(boolean hard, Map<String, String> params);
 

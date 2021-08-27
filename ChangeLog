@@ -1,5 +1,11 @@
 2021-08-21  Mikio Hirabayashi  <hirarin@gmail.com>
 
+	- Release: 0.1.21
+
+	- Compatibility to the C++ library: Tkrzw 1.0.6
+
+2021-08-21  Mikio Hirabayashi  <hirarin@gmail.com>
+
 	- Release: 0.1.20
 
 	- Compatibility to the C++ library: Tkrzw 1.0.2
