@@ -74,7 +74,7 @@ install :
 	cp -Rf $(LIBRARYFILES) $(DESTDIR)$(LIBDIR)
 	@printf '\n'
 	@printf '#================================================================\n'
-	@printf '# Thanks for using Kyoto Cabinet for Java.\n'
+	@printf '# Thanks for using Tkrzw for Java.\n'
 	@printf '#================================================================\n'
 
 uninstall :
