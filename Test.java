@@ -511,7 +511,7 @@ public class Test {
         if (parts.length > 1) {
           copy_path += "." + parts[1];
         }
-        check(dbm.copyFileData(copy_path).equals(Status.SUCCESS));
+        check(dbm.copyFileData(copy_path, false).equals(Status.SUCCESS));
         DBM copy_dbm = new DBM();
         if (path.indexOf(".") >= 0) {
           check(copy_dbm.open(copy_path, false).equals(Status.SUCCESS));
@@ -1096,7 +1096,7 @@ public class Test {
     check(async.increment("num", 5, 100).get().value.longValue() == 110);
     check(async.rebuild().get().equals(Status.SUCCESS));
     check(async.synchronize(false).get().equals(Status.SUCCESS));
-    check(async.copyFileData(copy_path).get().equals(Status.SUCCESS));
+    check(async.copyFileData(copy_path, false).get().equals(Status.SUCCESS));
     check(async.clear().get().equals(Status.SUCCESS));
     check(dbm.count() == 0);
     DBM copy_dbm = new DBM();

@@ -1317,7 +1317,7 @@ JNIEXPORT jobject JNICALL Java_tkrzw_DBM_synchronize
 
 // Implementation of DBM#copyFile.
 JNIEXPORT jobject JNICALL Java_tkrzw_DBM_copyFileData
-(JNIEnv* env, jobject jself, jstring jdestpath) {
+(JNIEnv* env, jobject jself, jstring jdestpath, jboolean sync_hard) {
   tkrzw::ParamDBM* dbm = GetDBM(env, jself);
   if (dbm == nullptr) {
     ThrowIllegalArgument(env, "not opened database");
@@ -1328,7 +1328,7 @@ JNIEXPORT jobject JNICALL Java_tkrzw_DBM_copyFileData
     return nullptr;
   }
   SoftString destpath(env, jdestpath);
-  const tkrzw::Status status = dbm->CopyFileData(destpath.Get());
+  const tkrzw::Status status = dbm->CopyFileData(destpath.Get(), sync_hard);
   return NewStatus(env, status);
 }
 
@@ -2211,7 +2211,7 @@ JNIEXPORT jobject JNICALL Java_tkrzw_AsyncDBM_synchronize
 
 // Implementation of AsyncDBM#copyFileData.
 JNIEXPORT jobject JNICALL Java_tkrzw_AsyncDBM_copyFileData
-(JNIEnv* env, jobject jself, jstring jdestpath) {
+(JNIEnv* env, jobject jself, jstring jdestpath, jboolean sync_hard) {
   tkrzw::AsyncDBM* asyncdbm = GetAsyncDBM(env, jself);
   if (asyncdbm == nullptr) {
     ThrowNullPointer(env);
@@ -2222,7 +2222,7 @@ JNIEXPORT jobject JNICALL Java_tkrzw_AsyncDBM_copyFileData
     return nullptr;
   }
   SoftString destpath(env, jdestpath);
-  auto* future = new tkrzw::StatusFuture(asyncdbm->CopyFileData(destpath.Get()));
+  auto* future = new tkrzw::StatusFuture(asyncdbm->CopyFileData(destpath.Get(), sync_hard));
   return NewFuture(env, future, false);
 }
 

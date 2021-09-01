@@ -352,9 +352,10 @@ public class AsyncDBM {
   /**
    * Copies the content of the database file to another file.
    * @param dest_path A path to the destination file.
+   * @param sync_hard True to do physical synchronization with the hardware.
    * @return The future for the result status.
    */
-  public native Future<Status> copyFileData(String dest_path);
+  public native Future<Status> copyFileData(String dest_path, boolean sync_hard);
 
   /**
    * Exports all records to another database.
