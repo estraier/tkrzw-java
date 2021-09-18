@@ -141,6 +141,15 @@ public class DBM {
    * <li>cap_rec_num (int): The maximum number of records.
    * <li>cap_mem_size (int): The total memory size to use.
    * </ul>
+   * <p>All databases support taking update logs into files.  It is enabled by setting the
+   * prefix of update log files.
+   * <ul>
+   * <li>ulog_prefix (str): The prefix of the update log files.
+   * <li>ulog_max_file_size (num): The maximum file size of each update log file.  By default,
+   * it is 1GiB.
+   * <li>ulog_server_id (num): The server ID attached to each log.  By default, it is 0.
+   * <li>ulog_dbm_index (num): The DBM index attached to each log.  By default, it is 0.
+   * </ul>
    * <p>For the file "PositionalParallelFile" and "PositionalAtomicFile", these optional
    * parameters are supported.
    * <ul>
