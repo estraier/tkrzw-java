@@ -408,6 +408,7 @@ public class Test {
       check(dbm.getFileSize() > 0);
       if (!path.isEmpty()) {
         check(dbm.getFilePath().indexOf(path) >= 0);
+        check(dbm.getTimestamp() > 0);
       }
       check(dbm.isWritable());
       check(dbm.isHealthy());

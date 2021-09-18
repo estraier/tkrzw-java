@@ -1260,6 +1260,22 @@ JNIEXPORT jstring JNICALL Java_tkrzw_DBM_getFilePath
   return nullptr;
 }
 
+// Implementation of DBM#getTimestamp.
+JNIEXPORT jdouble JNICALL Java_tkrzw_DBM_getTimestamp
+(JNIEnv* env, jobject jself) {
+  tkrzw::ParamDBM* dbm = GetDBM(env, jself);
+  if (dbm == nullptr) {
+    ThrowIllegalArgument(env, "not opened database");
+    return tkrzw::DOUBLENAN;
+  }
+  double timestamp = 0;
+  const tkrzw::Status status = dbm->GetTimestamp(&timestamp);
+  if (status == tkrzw::Status::SUCCESS) {
+    return timestamp;
+  }
+  return tkrzw::DOUBLENAN;
+}
+
 // Implementation of DBM#clear.
 JNIEXPORT jobject JNICALL Java_tkrzw_DBM_clear
 (JNIEnv* env, jobject jself) {

@@ -531,6 +531,12 @@ public class DBM {
   public native String getFilePath();
 
   /**
+   * Gets the timestamp in seconds of the last modified time.
+   * @return The timestamp of the last modified time, or NaN on failure.
+   */
+  public native double getTimestamp();
+
+  /**
    * Removes all records.
    * @return The result status.
    */
