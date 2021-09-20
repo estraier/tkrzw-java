@@ -673,10 +673,14 @@ JNIEXPORT jobject JNICALL Java_tkrzw_DBM_open
   if (tkrzw::StrToBool(tkrzw::SearchMap(params, "no_lock", "false"))) {
     open_options |= tkrzw::File::OPEN_NO_LOCK;
   }
+  if (tkrzw::StrToBool(tkrzw::SearchMap(params, "sync_hard", "false"))) {
+    open_options |= tkrzw::File::OPEN_SYNC_HARD;
+  }
   params.erase("truncate");
   params.erase("no_create");
   params.erase("no_wait");
   params.erase("no_lock");
+  params.erase("sync_hard");
   if (num_shards >= 0) {
     dbm = new tkrzw::ShardDBM();
   } else {
@@ -2391,6 +2395,9 @@ JNIEXPORT jobject JNICALL Java_tkrzw_File_open
   }
   if (tkrzw::StrToBool(tkrzw::SearchMap(params, "no_lock", "false"))) {
     open_options |= tkrzw::File::OPEN_NO_LOCK;
+  }
+  if (tkrzw::StrToBool(tkrzw::SearchMap(params, "sync_hard", "false"))) {
+    open_options |= tkrzw::File::OPEN_SYNC_HARD;
   }
   const tkrzw::Status status = file->OpenAdvanced(
       std::string(path.Get()), writable, open_options, params);

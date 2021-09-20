@@ -58,6 +58,7 @@ public class File {
    * <li>no_create (bool): True to omit file creation.
    * <li>no_wait (bool): True to fail if the file is locked by another process.
    * <li>no_lock (bool): True to omit file locking.
+   * <li>sync_hard (bool): True to do physical synchronization when closing.
    * </ul>
    * <p>The optional parameter "file" specifies the internal file implementation class.
    * The default file class is "MemoryMapAtomicFile".  The other supported classes are

@@ -73,6 +73,7 @@ public class DBM {
    * <li>no_create (bool): True to omit file creation.
    * <li>no_wait (bool): True to fail if the file is locked by another process.
    * <li>no_lock (bool): True to omit file locking.
+   * <li>sync_hard (bool): True to do physical synchronization when closing.
    * </ul>
    * <p>The optional parameter "dbm" supercedes the decision of the database type by the
    * extension.  The value is the type name: "HashDBM", "TreeDBM", "SkipDBM", "TinyDBM",
