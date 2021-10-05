@@ -403,6 +403,12 @@ public class Test {
           check(dbm.remove(key.getBytes()).equals(Status.SUCCESS));
         }
       }
+      if (class_name.equals("HashDBM") || class_name.equals("TreeDBM") ||
+          class_name.equals("TinyDBM") || class_name.equals("BabyDBM")) {
+        check(dbm.set("日本", "東京", true).equals(Status.SUCCESS));
+        check(dbm.get("日本").equals("東京"));
+        check(dbm.remove("日本").equals(Status.SUCCESS));
+      }
       check(dbm.synchronize(false, synchronize_params).equals(Status.SUCCESS));
       check(dbm.count() == 10);
       check(dbm.getFileSize() > 0);
