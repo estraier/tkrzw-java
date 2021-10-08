@@ -100,7 +100,6 @@ public class DBM {
    * "RESTORE_NOOP" to do nothing.  By default, as many records as possible are restored.
    * <li>fbp_capacity (int): The capacity of the free block pool.
    * <li>min_read_size (int): The minimum reading size to read a record.
-   * <li>lock_mem_buckets (bool): True to lock the memory for the hash buckets.
    * <li>cache_buckets (bool): True to cache the hash buckets on memory.
    * </ul>
    * <p>For TreeDBM, all optional parameters for HashDBM are available.  In addition, these
