@@ -308,8 +308,7 @@ public class Test {
     confs.add(Map.of(
         "path", "casket.tkh",
         "open_params",
-        "update_mode=UPDATE_APPENDING,offset_width=3,align_pow=1,num_buckets=100,fbp_capacity=64" +
-        ",lock_mem_buckets=true",
+        "update_mode=UPDATE_APPENDING,offset_width=3,align_pow=1,num_buckets=100,fbp_capacity=64",
         "rebuild_params",
         "update_mode=UPDATE_APPENDING,offset_width=3,align_pow=1,num_buckets=100,fbp_capacity=64",
         "synchronize_params", "",
