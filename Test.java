@@ -600,7 +600,6 @@ public class Test {
       check(export_dbm.get("hop") == null);
       check(export_dbm.get("step") == null);
       check(export_dbm.count() == 0);
-      export_iter.destruct();
       check(export_dbm.append("foo", "bar", ",").equals(Status.SUCCESS));
       check(export_dbm.append("foo", "baz", ",").equals(Status.SUCCESS));
       check(export_dbm.append("foo", "qux", "").equals(Status.SUCCESS));
@@ -649,6 +648,37 @@ public class Test {
           {"one".getBytes(), "two".getBytes(), "three".getBytes()};
       check(export_dbm.removeMulti(raw_multi_keys_remove).equals(Status.SUCCESS));
       check(export_dbm.count() == 1);
+      check(export_dbm.set("zero", "foo").equals(Status.SUCCESS));
+      check(export_dbm.rekey("zero", "one", true).equals(Status.SUCCESS));
+      check(export_dbm.get("zero") == null);
+      check(export_dbm.get("one").equals("foo"));
+      int step_count = 0;
+      check(export_iter.first().equals(Status.SUCCESS));
+      while (true) {
+        status.set(Status.UNKNOWN_ERROR, "");
+        record = export_iter.stepString(status);
+        if (record == null) {
+          check(status.equals(Status.NOT_FOUND_ERROR));
+          break;
+        }
+        check(status.equals(Status.SUCCESS));
+        step_count++;
+      }
+      check(step_count == export_dbm.count());
+      int pop_count = 0;
+      while (true) {
+        status.set(Status.UNKNOWN_ERROR, "");
+        record = export_iter.popFirstString(status);
+        if (record == null) {
+          check(status.equals(Status.NOT_FOUND_ERROR));
+          break;
+        }
+        check(status.equals(Status.SUCCESS));
+        pop_count++;
+      }
+      check(pop_count == step_count);
+      check(export_dbm.count() == 0);
+      export_iter.destruct();
       check(export_dbm.close().equals(Status.SUCCESS));
       export_dbm.destruct();
       iter.destruct();
