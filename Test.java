@@ -649,7 +649,7 @@ public class Test {
       check(export_dbm.removeMulti(raw_multi_keys_remove).equals(Status.SUCCESS));
       check(export_dbm.count() == 1);
       check(export_dbm.set("zero", "foo").equals(Status.SUCCESS));
-      check(export_dbm.rekey("zero", "one", true).equals(Status.SUCCESS));
+      check(export_dbm.rekey("zero", "one", true, false).equals(Status.SUCCESS));
       check(export_dbm.get("zero") == null);
       check(export_dbm.get("one").equals("foo"));
       int step_count = 0;

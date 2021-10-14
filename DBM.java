@@ -517,24 +517,27 @@ public class DBM {
    * @param old_key The old key of the record.
    * @param new_key The new key of the record.
    * @param overwrite Whether to overwrite the existing record of the new key.
+   * @param copying Whether to retain the record of the old key.
    * @return The result status.  If there's no matching record to the old key, NOT_FOUND_ERROR
    * is returned.  If the overwrite flag is false and there is an existing record of the new key,
    * DUPLICATION ERROR is returned.
    * @note This method is done atomically by ProcessMulti.  The other threads observe that the
    * record has either the old key or the new key.  No intermediate states are observed.
    */
-  public native Status rekey(byte[] old_key, byte[] new_key, boolean overwrite);
+  public native Status rekey(
+      byte[] old_key, byte[] new_key, boolean overwrite, boolean copying);
 
   /**
    * Changes the key of a record, with string data.
    * @param old_key The old key of the record.
    * @param new_key The new key of the record.
    * @param overwrite Whether to overwrite the existing record of the new key.
+   * @param copying Whether to retain the record of the old key.
    * @return The result status.
    */
-  public Status rekey(String old_key, String new_key, boolean overwrite) {
+  public Status rekey(String old_key, String new_key, boolean overwrite, boolean copying) {
     return rekey(old_key.getBytes(StandardCharsets.UTF_8),
-                 new_key.getBytes(StandardCharsets.UTF_8), overwrite);
+                 new_key.getBytes(StandardCharsets.UTF_8), overwrite, copying);
   }
 
   /**

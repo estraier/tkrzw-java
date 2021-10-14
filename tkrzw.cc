@@ -1228,7 +1228,8 @@ JNIEXPORT jobject JNICALL Java_tkrzw_DBM_compareExchangeMulti
 
 // Implementation of DBM#rekey.
 JNIEXPORT jobject JNICALL Java_tkrzw_DBM_rekey
-(JNIEnv* env, jobject jself, jbyteArray jold_key, jbyteArray jnew_key, jboolean overwrite) {
+(JNIEnv* env, jobject jself, jbyteArray jold_key, jbyteArray jnew_key,
+ jboolean overwrite, jboolean copying) {
   tkrzw::ParamDBM* dbm = GetDBM(env, jself);
   if (dbm == nullptr) {
     ThrowIllegalArgument(env, "not opened database");
@@ -1240,7 +1241,7 @@ JNIEXPORT jobject JNICALL Java_tkrzw_DBM_rekey
   }
   SoftByteArray old_key(env, jold_key);
   SoftByteArray new_key(env, jnew_key);
-  const tkrzw::Status status = dbm->Rekey(old_key.Get(), new_key.Get(), overwrite);
+  const tkrzw::Status status = dbm->Rekey(old_key.Get(), new_key.Get(), overwrite, copying);
   return NewStatus(env, status);
 }
 
