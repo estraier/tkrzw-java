@@ -279,45 +279,6 @@ public class Iterator {
   }
 
   /**
-   * Jumps to the first record, removes it, and get the data.
-   * @param status The status object to store the result status.  If it is null, it is ignored.
-   * @return A pair of the key and the value of the first record, or null on failure.
-   */
-  public native byte[][] popFirst(Status status);
-
-  /**
-   * Jumps to the first record, removes it, and get the data, witout status assingment.
-   * @return A pair of the key and the value of the first record, or null on failure.
-   */
-  public byte[][] popFirst() {
-    return popFirst(null);
-  }
-
-  /**
-   * Jumps to the first record, removes it, and get the string data.
-   * @param status The status object to store the result status.  If it is null, it is ignored.
-   * @return A pair of the key and the value of the first record, or null on failure.
-   */
-  public String[] popFirstString(Status status) {
-    byte[][] record = popFirst(status);
-    if (record == null) {
-      return null;
-    }
-    String[] str_record = new String[2];
-    str_record[0] = new String(record[0], StandardCharsets.UTF_8);
-    str_record[1] = new String(record[1], StandardCharsets.UTF_8);
-    return str_record;
-  }
-
-  /**
-   * Jumps to the first record, removes it, and get the string data, witout status assingment.
-   * @return A pair of the key and the value of the first record, or null on failure.
-   */
-  public String[] popFirstString() {
-    return popFirstString(null);
-  }
-
-  /**
    * Gets a string representation of the iterator.
    */
   public native String toString();

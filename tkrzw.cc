@@ -1245,6 +1245,30 @@ JNIEXPORT jobject JNICALL Java_tkrzw_DBM_rekey
   return NewStatus(env, status);
 }
 
+// Implementation of DBM#popFirst.
+JNIEXPORT jobjectArray JNICALL Java_tkrzw_DBM_popFirst
+(JNIEnv* env, jobject jself, jobject jstatus) {
+  tkrzw::ParamDBM* dbm = GetDBM(env, jself);
+  if (dbm == nullptr) {
+    ThrowIllegalArgument(env, "not opened database");
+    return nullptr;
+  }
+  std::string key, value;
+  const tkrzw::Status status = dbm->PopFirst(&key, &value);
+  if (jstatus != nullptr) {
+    SetStatus(env, status, jstatus);
+  }
+  if (status == tkrzw::Status::SUCCESS) {
+    jobjectArray jrec = env->NewObjectArray(2, cls_byteary, nullptr);
+    jbyteArray jkey = NewByteArray(env, key);
+    jbyteArray jvalue = NewByteArray(env, value);
+    env->SetObjectArrayElement(jrec, 0, jkey);
+    env->SetObjectArrayElement(jrec, 1, jvalue);
+    return jrec;
+  }
+  return nullptr;
+}
+
 // Implementation of DBM#count.
 JNIEXPORT jlong JNICALL Java_tkrzw_DBM_count
 (JNIEnv* env, jobject jself) {
@@ -1774,30 +1798,6 @@ JNIEXPORT jobjectArray JNICALL Java_tkrzw_Iterator_step
   }
   std::string key, value;
   const tkrzw::Status status = iter->Step(&key, &value);
-  if (jstatus != nullptr) {
-    SetStatus(env, status, jstatus);
-  }
-  if (status == tkrzw::Status::SUCCESS) {
-    jobjectArray jrec = env->NewObjectArray(2, cls_byteary, nullptr);
-    jbyteArray jkey = NewByteArray(env, key);
-    jbyteArray jvalue = NewByteArray(env, value);
-    env->SetObjectArrayElement(jrec, 0, jkey);
-    env->SetObjectArrayElement(jrec, 1, jvalue);
-    return jrec;
-  }
-  return nullptr;
-}
-
-// Implementation of Iterator#popFirst.
-JNIEXPORT jobjectArray JNICALL Java_tkrzw_Iterator_popFirst
-(JNIEnv* env, jobject jself, jobject jstatus) {
-  tkrzw::DBM::Iterator* iter = GetIter(env, jself);
-  if (iter == nullptr) {
-    ThrowNullPointer(env);
-    return nullptr;
-  }
-  std::string key, value;
-  const tkrzw::Status status = iter->PopFirst(&key, &value);
   if (jstatus != nullptr) {
     SetStatus(env, status, jstatus);
   }

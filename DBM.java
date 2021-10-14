@@ -541,6 +541,45 @@ public class DBM {
   }
 
   /**
+   * Gets the first record and removes it.
+   * @param status The status object to store the result status.  If it is null, it is ignored.
+   * @return A pair of the key and the value of the first record, or null on failure.
+   */
+  public native byte[][] popFirst(Status status);
+
+  /**
+   * Gets the first record and removes it, without status assingment.
+   * @return A pair of the key and the value of the first record, or null on failure.
+   */
+  public byte[][] popFirst() {
+    return popFirst(null);
+  }
+
+  /**
+   * Gets the first record and removes it, as string data.
+   * @param status The status object to store the result status.  If it is null, it is ignored.
+   * @return A pair of the key and the value of the first record, or null on failure.
+   */
+  public String[] popFirstString(Status status) {
+    byte[][] record = popFirst(status);
+    if (record == null) {
+      return null;
+    }
+    String[] str_record = new String[2];
+    str_record[0] = new String(record[0], StandardCharsets.UTF_8);
+    str_record[1] = new String(record[1], StandardCharsets.UTF_8);
+    return str_record;
+  }
+
+  /**
+   * Gets the first record and removes it, as string data, without status assingment.
+   * @return A pair of the key and the value of the first record, or null on failure.
+   */
+  public String[] popFirstString() {
+    return popFirstString(null);
+  }
+
+  /**
    * Gets the number of records.
    * @return The number of records on success, or -1 on failure.
    */

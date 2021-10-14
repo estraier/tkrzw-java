@@ -668,7 +668,7 @@ public class Test {
       int pop_count = 0;
       while (true) {
         status.set(Status.UNKNOWN_ERROR, "");
-        record = export_iter.popFirstString(status);
+        record = export_dbm.popFirstString(status);
         if (record == null) {
           check(status.equals(Status.NOT_FOUND_ERROR));
           break;
