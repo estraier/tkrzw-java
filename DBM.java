@@ -556,7 +556,7 @@ public class DBM {
   }
 
   /**
-   * Gets the first record and removes it, as string data.
+   * Gets the first record as strings and removes it.
    * @param status The status object to store the result status.  If it is null, it is ignored.
    * @return A pair of the key and the value of the first record, or null on failure.
    */
@@ -572,7 +572,7 @@ public class DBM {
   }
 
   /**
-   * Gets the first record and removes it, as string data, without status assingment.
+   * Gets the first record as strings and removes it, without status assingment.
    * @return A pair of the key and the value of the first record, or null on failure.
    */
   public String[] popFirstString() {
