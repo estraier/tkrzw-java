@@ -579,22 +579,22 @@ public class Test {
       check(export_iter.first().equals(Status.SUCCESS));
       check(export_iter.set("foobar").equals(Status.SUCCESS));
       check(export_iter.remove().equals(Status.SUCCESS));
-      check(export_dbm.compareExchangeMultiStr(
+      check(export_dbm.compareExchangeMultiString(
           makeStrMap("hop", null, "step", null),
           makeStrMap("hop", "one", "step", "two")).equals(Status.SUCCESS));
       check(export_dbm.get("hop").equals("one"));
       check(export_dbm.get("step").equals("two"));
-      check(export_dbm.compareExchangeMultiStr(
+      check(export_dbm.compareExchangeMultiString(
           makeStrMap("hop", "one", "step", null),
           makeStrMap("hop", "uno", "step", "dos")).equals(Status.INFEASIBLE_ERROR));
       check(export_dbm.get("hop").equals("one"));
       check(export_dbm.get("step").equals("two"));
-      check(export_dbm.compareExchangeMultiStr(
+      check(export_dbm.compareExchangeMultiString(
           makeStrMap("hop", "one", "step", "two"),
           makeStrMap("hop", "1", "step", "2")).equals(Status.SUCCESS));
       check(export_dbm.get("hop").equals("1"));
       check(export_dbm.get("step").equals("2"));
-      check(export_dbm.compareExchangeMultiStr(
+      check(export_dbm.compareExchangeMultiString(
           makeStrMap("hop", "1", "step", "2"),
           makeStrMap("hop", null, "step", null)).equals(Status.SUCCESS));
       check(export_dbm.get("hop") == null);
@@ -606,7 +606,7 @@ public class Test {
       check(export_dbm.get("foo").equals("bar,bazqux"));
       Map<String, String> multi_records = Map.of(
           "one", "first", "two", "second", "three", "third");
-      check(export_dbm.setMultiStr(multi_records, true).equals(Status.SUCCESS));
+      check(export_dbm.setMultiString(multi_records, true).equals(Status.SUCCESS));
       multi_records = Map.of("two", "2", "three", "3");
       check(export_dbm.appendMulti(multi_records, ":").equals(Status.SUCCESS));
       String[] multi_keys = {"one", "two", "three", "four"};
@@ -1070,7 +1070,7 @@ public class Test {
     check(async.remove("three".getBytes()).get().equals(Status.SUCCESS));
     check(dbm.count() == 0);
     Map<String, String> str_records = Map.of("one", "hop", "two", "step", "three", "jump");
-    check(async.setMultiStr(str_records, false).get().equals(Status.SUCCESS));
+    check(async.setMultiString(str_records, false).get().equals(Status.SUCCESS));
     check(dbm.count() == 3);
     str_records = Map.of("one", "1", "two", "2", "three", "3");
     check(async.appendMulti(str_records, ":").get().equals(Status.SUCCESS));
@@ -1113,15 +1113,15 @@ public class Test {
     check(dbm.get("japan").equals("kyoto"));
     check(async.compareExchange("japan", "kyoto", null).get().equals(Status.SUCCESS));
     check(dbm.count() == 0);
-    check(async.compareExchangeMultiStr(
+    check(async.compareExchangeMultiString(
         makeStrMap("one", null, "two", null),
         makeStrMap("one", "1", "two", "2")).get().equals(Status.SUCCESS));
-    check(async.compareExchangeMultiStr(
+    check(async.compareExchangeMultiString(
         makeStrMap("one", "1", "two", "2"),
         makeStrMap("one", "11", "two", "22")).get().equals(Status.SUCCESS));
     check(dbm.get("one").equals("11"));
     check(dbm.get("two").equals("22"));
-    check(async.compareExchangeMultiStr(
+    check(async.compareExchangeMultiString(
         makeStrMap("one", "11", "two", "22"),
         makeStrMap("one", null, "two", null)).get().equals(Status.SUCCESS));
     check(dbm.count() == 0);
@@ -1165,6 +1165,24 @@ public class Test {
     Status.And<byte[][]> search_raw_result = search_raw_future.get();
     check(search_raw_result.status.equals(Status.SUCCESS));
     check(search_raw_result.value.length == 2);
+    check(async.clear().get().equals(Status.SUCCESS));
+    check(async.set("aa", "AAA").get().equals(Status.SUCCESS));
+    check(async.rekey("aa", "bb", false, false).get().equals(Status.SUCCESS));
+    get_str_future = async.get("bb");
+    get_str_result = get_str_future.get();
+    check(get_str_result.status.equals(Status.SUCCESS));
+    check(get_str_result.value.equals("AAA"));
+    Future<Status.And<byte[][]>> pop_future = async.popFirst();
+    Status.And<byte[][]> pop_result = pop_future.get();
+    check(pop_result.status.equals(Status.SUCCESS));
+    check(Arrays.equals(pop_result.value[0], "bb".getBytes()));
+    check(Arrays.equals(pop_result.value[1], "AAA".getBytes()));
+    check(async.set("cc", "CCC").get().equals(Status.SUCCESS));
+    Future<Status.And<String[]>> pop_str_future = async.popFirstString();
+    Status.And<String[]> pop_str_result = pop_str_future.get();
+    check(pop_str_result.status.equals(Status.SUCCESS));
+    check(pop_str_result.value[0].equals("cc"));
+    check(pop_str_result.value[1].equals("CCC"));
     async.destruct();
     check(dbm.close().equals(Status.Code.SUCCESS));
     dbm.destruct();

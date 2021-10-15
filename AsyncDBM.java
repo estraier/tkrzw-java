@@ -148,7 +148,7 @@ public class AsyncDBM {
    * @return The future for the result status.  If there are records avoiding overwriting,
    * DUPLICATION_ERROR is set.
    */
-  public native Future<Status> setMultiStr(Map<String, String> records, boolean overwrite);
+  public native Future<Status> setMultiString(Map<String, String> records, boolean overwrite);
 
   /**
    * Removes a record of a key.
@@ -288,7 +288,7 @@ public class AsyncDBM {
    * @return The future for the result status.  If the condition doesn't meet, INFEASIBLE_ERROR
    * is set.
    */
-  public Future<Status> compareExchangeMultiStr(
+  public Future<Status> compareExchangeMultiString(
       Map<String, String> expected, Map<String, String> desired) {
     Map<byte[], byte[]> rawExpected = new HashMap<byte[], byte[]>();
     for (Map.Entry<String, String> record : expected.entrySet()) {
@@ -306,6 +306,48 @@ public class AsyncDBM {
     }
     return compareExchangeMulti(rawExpected, rawDesired);
   }
+
+  /**
+   * Changes the key of a record.
+   * @param old_key The old key of the record.
+   * @param new_key The new key of the record.
+   * @param overwrite Whether to overwrite the existing record of the new key.
+   * @param copying Whether to retain the record of the old key.
+   * @return The future for the result status.  If there's no matching record to the old key,
+   * NOT_FOUND_ERROR is set.  If the overwrite flag is false and there is an existing record of
+   * the new key, DUPLICATION ERROR is set.
+   * @note This method is done atomically.  The other threads observe that the record has either
+   * the old key or the new key.  No intermediate states are observed.
+   */
+  public native Future<Status> rekey(
+      byte[] old_key, byte[] new_key, boolean overwrite, boolean copying);
+
+  /**
+   * Changes the key of a record, with string data.
+   * @param old_key The old key of the record.
+   * @param new_key The new key of the record.
+   * @param overwrite Whether to overwrite the existing record of the new key.
+   * @param copying Whether to retain the record of the old key.
+   * @return The future for the result status.
+   */
+  public Future<Status> rekey(String old_key, String new_key, boolean overwrite, boolean copying) {
+    return rekey(old_key.getBytes(StandardCharsets.UTF_8),
+                 new_key.getBytes(StandardCharsets.UTF_8), overwrite, copying);
+  }
+
+  /**
+   * Gets the first record and removes it.
+   * @return The future for the result status and a pair of the key and the value of the first
+   * record.
+   */
+  public native Future<Status.And<byte[][]>> popFirst();
+
+  /**
+   * Gets the first record as strings and removes it.
+   * @return The future for the result status and a pair of the key and the value of the first
+   * record.
+   */
+  public native Future<Status.And<String[]>> popFirstString();
 
   /**
    * Removes all records.

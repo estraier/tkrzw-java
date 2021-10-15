@@ -301,7 +301,7 @@ public class DBM {
    * @return The result status.  If there are records avoiding overwriting, DUPLICATION_ERROR
    * is returned.
    */
-  public native Status setMultiStr(Map<String, String> records, boolean overwrite);
+  public native Status setMultiString(Map<String, String> records, boolean overwrite);
 
   /**
    * Sets a record and get the old value.
@@ -493,7 +493,7 @@ public class DBM {
    * is to be removed.
    * @return The result status.  If the condition doesn't meet, INFEASIBLE_ERROR is returned.
    */
-  public Status compareExchangeMultiStr(
+  public Status compareExchangeMultiString(
       Map<String, String> expected, Map<String, String> desired) {
     Map<byte[], byte[]> rawExpected = new HashMap<byte[], byte[]>();
     for (Map.Entry<String, String> record : expected.entrySet()) {
@@ -521,8 +521,8 @@ public class DBM {
    * @return The result status.  If there's no matching record to the old key, NOT_FOUND_ERROR
    * is returned.  If the overwrite flag is false and there is an existing record of the new key,
    * DUPLICATION ERROR is returned.
-   * @note This method is done atomically by ProcessMulti.  The other threads observe that the
-   * record has either the old key or the new key.  No intermediate states are observed.
+   * @note This method is done atomically.  The other threads observe that the record has either
+   * the old key or the new key.  No intermediate states are observed.
    */
   public native Status rekey(
       byte[] old_key, byte[] new_key, boolean overwrite, boolean copying);

@@ -557,6 +557,26 @@ JNIEXPORT jobject JNICALL Java_tkrzw_Future_get
     }
     return jand;
   }
+  if (type == typeid(std::pair<tkrzw::Status, std::pair<std::string, std::string>>)) {
+    const auto& result = future->GetStringPair();
+    delete future;
+    SetFuture(env, jself, nullptr);
+    jobject jand = env->NewObject(cls_status_and, id_status_and_init);
+    jobject jstatus = NewStatus(env, result.first);
+    env->SetObjectField(jand, id_status_and_status, jstatus);
+    if (env->GetBooleanField(jself, id_future_is_str)) {
+      jobjectArray jpair = env->NewObjectArray(2, cls_str, nullptr);
+      env->SetObjectArrayElement(jpair, 0, NewString(env, result.second.first.c_str()));
+      env->SetObjectArrayElement(jpair, 1, NewString(env, result.second.second.c_str()));
+      env->SetObjectField(jand, id_status_and_value, jpair);
+    } else {
+      jobjectArray jpair = env->NewObjectArray(2, cls_byteary, nullptr);
+      env->SetObjectArrayElement(jpair, 0, NewByteArray(env, result.second.first));
+      env->SetObjectArrayElement(jpair, 1, NewByteArray(env, result.second.second));
+      env->SetObjectField(jand, id_status_and_value, jpair);
+    }
+    return jand;
+  }
   if (type == typeid(std::pair<tkrzw::Status, std::vector<std::string>>)) {
     const auto& result = future->GetStringVector();
     delete future;
@@ -865,8 +885,8 @@ JNIEXPORT jobject JNICALL Java_tkrzw_DBM_setMulti
   return NewStatus(env, status);
 }
 
-// Implementation of DBM#SetMulti.
-JNIEXPORT jobject JNICALL Java_tkrzw_DBM_setMultiStr
+// Implementation of DBM#SetMultiString.
+JNIEXPORT jobject JNICALL Java_tkrzw_DBM_setMultiString
 (JNIEnv* env, jobject jself, jobject jrecords, jboolean overwrite) {
   tkrzw::ParamDBM* dbm = GetDBM(env, jself);
   if (dbm == nullptr) {
@@ -1130,7 +1150,7 @@ JNIEXPORT jobject JNICALL Java_tkrzw_DBM_appendMulti__Ljava_util_Map_2_3B
   return NewStatus(env, status);
 }
 
-// Implementation of DBM#appendMulti
+// Implementation of DBM#appendMulti.
 JNIEXPORT jobject JNICALL Java_tkrzw_DBM_appendMulti__Ljava_util_Map_2Ljava_lang_String_2
 (JNIEnv* env, jobject jself, jobject jrecords, jstring jdelim) {
   tkrzw::ParamDBM* dbm = GetDBM(env, jself);
@@ -1996,8 +2016,8 @@ JNIEXPORT jobject JNICALL Java_tkrzw_AsyncDBM_setMulti
   return NewFuture(env, future, false);
 }
 
-// Implementation of AsyncDBM#setMultiStr.
-JNIEXPORT jobject JNICALL Java_tkrzw_AsyncDBM_setMultiStr
+// Implementation of AsyncDBM#setMultiString.
+JNIEXPORT jobject JNICALL Java_tkrzw_AsyncDBM_setMultiString
 (JNIEnv* env, jobject jself, jobject jrecords, jboolean overwrite) {
   tkrzw::AsyncDBM* asyncdbm = GetAsyncDBM(env, jself);
   if (asyncdbm == nullptr) {
@@ -2250,6 +2270,50 @@ JNIEXPORT jobject JNICALL Java_tkrzw_AsyncDBM_compareExchangeMulti
   const auto& desired = ExtractSVPairs(env, jdesired, &desired_ph);
   auto* future = new tkrzw::StatusFuture(asyncdbm->CompareExchangeMulti(expected, desired));
   return NewFuture(env, future, false);
+}
+
+// Implementation of AsyncDBM#rekey.
+JNIEXPORT jobject JNICALL Java_tkrzw_AsyncDBM_rekey
+(JNIEnv* env, jobject jself, jbyteArray jold_key, jbyteArray jnew_key,
+ jboolean overwrite, jboolean copying) {
+  tkrzw::AsyncDBM* asyncdbm = GetAsyncDBM(env, jself);
+  if (asyncdbm == nullptr) {
+    ThrowNullPointer(env);
+    return nullptr;
+  }
+  if (jold_key == nullptr || jnew_key == nullptr) {
+    ThrowNullPointer(env);
+    return nullptr;
+  }
+  SoftByteArray old_key(env, jold_key);
+  SoftByteArray new_key(env, jnew_key);
+  auto* future = new tkrzw::StatusFuture(asyncdbm->Rekey(
+      old_key.Get(), new_key.Get(), overwrite, copying));
+  return NewFuture(env, future, false);
+}
+
+// Implementation of AsyncDBM#popFirst.
+JNIEXPORT jobject JNICALL Java_tkrzw_AsyncDBM_popFirst
+(JNIEnv* env, jobject jself) {
+  tkrzw::AsyncDBM* asyncdbm = GetAsyncDBM(env, jself);
+  if (asyncdbm == nullptr) {
+    ThrowNullPointer(env);
+    return nullptr;
+  }
+  auto* future = new tkrzw::StatusFuture(asyncdbm->PopFirst());
+  return NewFuture(env, future, false);
+}
+
+// Implementation of AsyncDBM#popFirstString.
+JNIEXPORT jobject JNICALL Java_tkrzw_AsyncDBM_popFirstString
+(JNIEnv* env, jobject jself) {
+  tkrzw::AsyncDBM* asyncdbm = GetAsyncDBM(env, jself);
+  if (asyncdbm == nullptr) {
+    ThrowNullPointer(env);
+    return nullptr;
+  }
+  auto* future = new tkrzw::StatusFuture(asyncdbm->PopFirst());
+  return NewFuture(env, future, true);
 }
 
 // Implementation of AsyncDBM#clear.
