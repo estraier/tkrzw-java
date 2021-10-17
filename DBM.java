@@ -580,6 +580,29 @@ public class DBM {
   }
 
   /**
+   * Adds a record with a key of the current timestamp.
+   * @param value The value of the record.
+   * @param wtime The current wall time used to generate the key.  If it is negative, the system
+   * clock is used.
+   * @return The result status.
+   * @note The key is generated as an 8-bite big-endian binary string of the timestamp.  If
+   * there is an existing record matching the generated key, the key is regenerated and the
+   * attempt is repeated until it succeeds.
+   */
+  public native Status pushLast(byte[] value, double wtime);
+
+  /**
+   * Adds a record with a key of the current timestamp.
+   * @param value The value of the record.
+   * @param wtime The current wall time used to generate the key.  If it is negative, the system
+   * clock is used.
+   * @return The result status.
+   */
+  public Status pushLast(String value, double wtime) {
+    return pushLast(value.getBytes(StandardCharsets.UTF_8), wtime);
+  }
+
+  /**
    * Gets the number of records.
    * @return The number of records on success, or -1 on failure.
    */

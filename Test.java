@@ -678,6 +678,9 @@ public class Test {
       }
       check(pop_count == step_count);
       check(export_dbm.count() == 0);
+      check(export_dbm.pushLast("one", 0).equals(Status.SUCCESS));
+      record = export_dbm.popFirstString();
+      check(record[1].equals("one"));
       export_iter.destruct();
       check(export_dbm.close().equals(Status.SUCCESS));
       export_dbm.destruct();
@@ -1183,6 +1186,20 @@ public class Test {
     check(pop_str_result.status.equals(Status.SUCCESS));
     check(pop_str_result.value[0].equals("cc"));
     check(pop_str_result.value[1].equals("CCC"));
+    Status.And<byte[]> push_result = async.pushLast("foo".getBytes(), 0).get();
+    check(push_result.status.equals(Status.SUCCESS));
+    check(push_result.value.length == 8);
+    pop_result = async.popFirst().get();
+    check(pop_result.status.equals(Status.SUCCESS));
+    check(Arrays.equals(pop_result.value[0], push_result.value));
+    check(Arrays.equals(pop_result.value[1], "foo".getBytes()));
+    push_result = async.pushLast("bar", 0).get();
+    check(push_result.status.equals(Status.SUCCESS));
+    check(push_result.value.length == 8);
+    pop_result = async.popFirst().get();
+    check(pop_result.status.equals(Status.SUCCESS));
+    check(Arrays.equals(pop_result.value[0], push_result.value));
+    check(Arrays.equals(pop_result.value[1], "bar".getBytes()));
     async.destruct();
     check(dbm.close().equals(Status.Code.SUCCESS));
     dbm.destruct();

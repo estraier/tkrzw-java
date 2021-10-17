@@ -1289,6 +1289,23 @@ JNIEXPORT jobjectArray JNICALL Java_tkrzw_DBM_popFirst
   return nullptr;
 }
 
+// Implementation of DBM#pushLast.
+JNIEXPORT jobject JNICALL Java_tkrzw_DBM_pushLast
+(JNIEnv* env, jobject jself, jbyteArray jvalue, jdouble wtime) {
+  tkrzw::ParamDBM* dbm = GetDBM(env, jself);
+  if (dbm == nullptr) {
+    ThrowIllegalArgument(env, "not opened database");
+    return nullptr;
+  }
+  if (jvalue == nullptr) {
+    ThrowNullPointer(env);
+    return nullptr;
+  }
+  SoftByteArray value(env, jvalue);
+  const tkrzw::Status status = dbm->PushLast(value.Get(), wtime);
+  return NewStatus(env, status);
+}
+
 // Implementation of DBM#count.
 JNIEXPORT jlong JNICALL Java_tkrzw_DBM_count
 (JNIEnv* env, jobject jself) {
@@ -2314,6 +2331,40 @@ JNIEXPORT jobject JNICALL Java_tkrzw_AsyncDBM_popFirstString
   }
   auto* future = new tkrzw::StatusFuture(asyncdbm->PopFirst());
   return NewFuture(env, future, true);
+}
+
+// Implementation of AsyncDBM#pushLast.
+JNIEXPORT jobject JNICALL Java_tkrzw_AsyncDBM_pushLast
+(JNIEnv* env, jobject jself, jbyteArray jvalue, jdouble wtime) {
+  tkrzw::AsyncDBM* asyncdbm = GetAsyncDBM(env, jself);
+  if (asyncdbm == nullptr) {
+    ThrowNullPointer(env);
+    return nullptr;
+  }
+  if (jvalue == nullptr) {
+    ThrowNullPointer(env);
+    return nullptr;
+  }
+  SoftByteArray value(env, jvalue);
+  auto* future = new tkrzw::StatusFuture(asyncdbm->PushLast(value.Get(), wtime));
+  return NewFuture(env, future, false);
+}
+
+// Implementation of AsyncDBM#pushLast.
+JNIEXPORT jobject JNICALL Java_tkrzw_AsyncDBM_pushLast___3BD
+(JNIEnv* env, jobject jself, jbyteArray jvalue, jdouble wtime) {
+  tkrzw::AsyncDBM* asyncdbm = GetAsyncDBM(env, jself);
+  if (asyncdbm == nullptr) {
+    ThrowNullPointer(env);
+    return nullptr;
+  }
+  if (jvalue == nullptr) {
+    ThrowNullPointer(env);
+    return nullptr;
+  }
+  SoftByteArray value(env, jvalue);
+  auto* future = new tkrzw::StatusFuture(asyncdbm->PushLast(value.Get(), wtime));
+  return NewFuture(env, future, false);
 }
 
 // Implementation of AsyncDBM#clear.
