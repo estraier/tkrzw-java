@@ -2350,23 +2350,6 @@ JNIEXPORT jobject JNICALL Java_tkrzw_AsyncDBM_pushLast
   return NewFuture(env, future, false);
 }
 
-// Implementation of AsyncDBM#pushLast.
-JNIEXPORT jobject JNICALL Java_tkrzw_AsyncDBM_pushLast___3BD
-(JNIEnv* env, jobject jself, jbyteArray jvalue, jdouble wtime) {
-  tkrzw::AsyncDBM* asyncdbm = GetAsyncDBM(env, jself);
-  if (asyncdbm == nullptr) {
-    ThrowNullPointer(env);
-    return nullptr;
-  }
-  if (jvalue == nullptr) {
-    ThrowNullPointer(env);
-    return nullptr;
-  }
-  SoftByteArray value(env, jvalue);
-  auto* future = new tkrzw::StatusFuture(asyncdbm->PushLast(value.Get(), wtime));
-  return NewFuture(env, future, false);
-}
-
 // Implementation of AsyncDBM#clear.
 JNIEXPORT jobject JNICALL Java_tkrzw_AsyncDBM_clear
 (JNIEnv* env, jobject jself) {

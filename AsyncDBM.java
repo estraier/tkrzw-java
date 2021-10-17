@@ -359,7 +359,7 @@ public class AsyncDBM {
    * there is an existing record matching the generated key, the key is regenerated and the
    * attempt is repeated until it succeeds.
    */
-  public native Future<Status.And<byte[]>> pushLast(byte[] value, double wtime);
+  public native Future<Status> pushLast(byte[] value, double wtime);
 
   /**
    * Adds a record with a key of the current timestamp.
@@ -371,7 +371,7 @@ public class AsyncDBM {
    * there is an existing record matching the generated key, the key is regenerated and the
    * attempt is repeated until it succeeds.
    */
-  public Future<Status.And<byte[]>> pushLast(String value, double wtime) {
+  public Future<Status> pushLast(String value, double wtime) {
     return pushLast(value.getBytes(StandardCharsets.UTF_8), wtime);
   }
 

@@ -1186,20 +1186,20 @@ public class Test {
     check(pop_str_result.status.equals(Status.SUCCESS));
     check(pop_str_result.value[0].equals("cc"));
     check(pop_str_result.value[1].equals("CCC"));
-    Status.And<byte[]> push_result = async.pushLast("foo".getBytes(), 0).get();
-    check(push_result.status.equals(Status.SUCCESS));
-    check(push_result.value.length == 8);
+
+
+    check(async.pushLast("foo".getBytes(), 0).get().equals(Status.SUCCESS));
     pop_result = async.popFirst().get();
     check(pop_result.status.equals(Status.SUCCESS));
-    check(Arrays.equals(pop_result.value[0], push_result.value));
     check(Arrays.equals(pop_result.value[1], "foo".getBytes()));
-    push_result = async.pushLast("bar", 0).get();
-    check(push_result.status.equals(Status.SUCCESS));
-    check(push_result.value.length == 8);
+
+
+    check(async.pushLast("bar", 0).get().equals(Status.SUCCESS));
     pop_result = async.popFirst().get();
     check(pop_result.status.equals(Status.SUCCESS));
-    check(Arrays.equals(pop_result.value[0], push_result.value));
     check(Arrays.equals(pop_result.value[1], "bar".getBytes()));
+
+
     async.destruct();
     check(dbm.close().equals(Status.Code.SUCCESS));
     dbm.destruct();
