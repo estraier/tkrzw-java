@@ -28,6 +28,7 @@ prefix = @prefix@
 exec_prefix = @exec_prefix@
 datarootdir = @datarootdir@
 LIBDIR = @libdir@
+JAVADIR = @datarootdir@/java
 DESTDIR =
 
 # Building configuration
@@ -69,8 +70,8 @@ untabify :
 	  done
 
 install :
-	mkdir -p $(DESTDIR)$(LIBDIR)
-	cp -Rf $(JARFILES) $(DESTDIR)$(LIBDIR)
+	mkdir -p $(DESTDIR)$(JAVADIR) $(DESTDIR)$(LIBDIR)
+	cp -Rf $(JARFILES) $(DESTDIR)$(JAVADIR)
 	cp -Rf $(LIBRARYFILES) $(DESTDIR)$(LIBDIR)
 	@printf '\n'
 	@printf '#================================================================\n'
@@ -78,7 +79,7 @@ install :
 	@printf '#================================================================\n'
 
 uninstall :
-	cd $(DESTDIR)$(LIBDIR) && rm -f $(JARFILES)
+	cd $(DESTDIR)$(JAVADIR) && rm -f $(JARFILES)
 	cd $(DESTDIR)$(LIBDIR) && rm -f $(LIBRARYFILES)
 
 dist :

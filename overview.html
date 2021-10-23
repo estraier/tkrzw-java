@@ -63,18 +63,19 @@ make check
 sudo make install
 </pre>
 
-<p>When a series of work finishes, the JAR file "tkrzw.jar" and the shared object files "libjtkrzw.so" and so on are installed under "/usr/local/lib".</p>
+<p>When a series of work finishes, the JAR file "tkrzw.jar" is installed under "/usr/local/share/java".  The shared object files "libjtkrzw.so" and so on are installed under "/usr/local/lib".  If you use a standard binary package on your system, read "/usr/local" as "/usr".</p>
 
-<p>Let the class search path include "/usr/local/lib/tkrzw.jar" and let the library search path include "/usr/local/lib".</p>
+<p>Let the class search path include "/usr/local/share/java/tkrzw.jar" and let the library search path include "/usr/local/lib".</p>
 
-<pre style="margin: 0em 0.8em; padding: 0.3em; background: #f8f8f8 none; border: 1px solid #dddddd; font-size: 90%;">CLASSPATH="$CLASSPATH:/usr/local/lib/tkrzw.jar"
+<pre style="margin: 0em 0.8em; padding: 0.3em; background: #f8f8f8 none; border: 1px solid #dddddd; font-size: 90%;">CLASSPATH="$CLASSPATH:/usr/local/share/java/tkrzw.jar"
 LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/local/lib"
 export CLASSPATH LD_LIBRARY_PATH
 </pre>
 
-<p>The above settings can be specified by options of the runtime command.</p>
+<p>The above settings can be specified by options of the compiler and runtime command.</p>
 
-<pre style="margin: 0em 0.8em; padding: 0.3em; background: #f8f8f8 none; border: 1px solid #dddddd; font-size: 90%;">java -cp .:tkrzw.jar -Djava.library.path=.:/usr/local/lib FooBarBaz ...
+<pre style="margin: 0em 0.8em; padding: 0.3em; background: #f8f8f8 none; border: 1px solid #dddddd; font-size: 90%;">javac -cp .:/usr/local/share/java/tkrzw.jar FooBarBaz.java ...
+java -cp .:/usr/local/share/java/tkrzw.jar -Djava.library.path=.:/usr/local/lib FooBarBaz ...
 </pre>
 
 <h2>Example</h2>
