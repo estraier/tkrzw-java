@@ -162,8 +162,8 @@ public class Test {
     STDERR.printf("  utility\n");
     STDERR.printf("  status\n");
     STDERR.printf("  basic\n");
-    STDERR.printf("  thread\n");
     STDERR.printf("  iter\n");
+    STDERR.printf("  thread\n");
     STDERR.printf("  search\n");
     STDERR.printf("  export\n");
     STDERR.printf("  asyncdbm\n");
