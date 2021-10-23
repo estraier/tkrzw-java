@@ -269,6 +269,10 @@ public class Test {
    */
   private static int runStatus() {
     STDOUT.printf("Running status tests:\n");
+    check(Status.Code.valueOf(0).equals(Status.SUCCESS));
+    check(Status.Code.valueOf(1).equals(Status.UNKNOWN_ERROR));
+    check(Status.Code.valueOf(2).equals(Status.SYSTEM_ERROR));
+    check(Status.Code.valueOf(256).equals(Status.UNKNOWN_ERROR));
     Status status = new Status();
     check(status.equals(new Status()));
     check(status.getCode() == Status.SUCCESS);

@@ -51,6 +51,31 @@ public class Status {
     APPLICATION_ERROR(13);
 
     /**
+     * Returns the code enum matching an integer.
+     * @param num The integer for the code.
+     * @return The mathing code.
+     */
+    public static Code valueOf(int num) {
+      switch (num) {
+        case 0: return SUCCESS;
+        case 1: return UNKNOWN_ERROR;
+        case 2: return SYSTEM_ERROR;
+        case 3: return NOT_IMPLEMENTED_ERROR;
+        case 4: return PRECONDITION_ERROR;
+        case 5: return INVALID_ARGUMENT_ERROR;
+        case 6: return CANCELED_ERROR;
+        case 7: return NOT_FOUND_ERROR;
+        case 8: return PERMISSION_ERROR;
+        case 9: return INFEASIBLE_ERROR;
+        case 10: return DUPLICATION_ERROR;
+        case 11: return BROKEN_DATA_ERROR;
+        case 12: return NETWORK_ERROR;
+        case 13: return APPLICATION_ERROR;
+      }
+      return UNKNOWN_ERROR;
+    }
+
+    /**
      * Constructor to set the ID value.
      */
     private Code(int id) {
