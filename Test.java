@@ -169,6 +169,7 @@ public class Test {
     STDERR.printf("  asyncdbm\n");
     STDERR.printf("  file\n");
     STDERR.printf("  perf [--path num] [--iter num] [--threads num] [--params expr] [--random]\n");
+    STDERR.printf("  wicked [--path num] [--iter num] [--threads num] [--params expr]\n");
     STDERR.printf("\n");
     System.exit(1);
   }
