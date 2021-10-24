@@ -275,6 +275,7 @@ public class Test {
     check(Status.Code.valueOf(256).equals(Status.UNKNOWN_ERROR));
     Status status = new Status();
     check(status.equals(new Status()));
+    check(!status.equals(new Status(Status.NOT_FOUND_ERROR)));
     check(status.getCode() == Status.SUCCESS);
     check(status.getMessage().length() == 0);
     check(status.toString().equals("SUCCESS"));

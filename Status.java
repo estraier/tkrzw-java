@@ -124,6 +124,15 @@ public class Status {
   }
 
   /**
+   * Constructor representing a specific status code.
+   * @param code The status code.
+   */
+  public Status(Code code) {
+    code_ = code;
+    message_ = "";
+  }
+
+  /**
    * Constructor representing a specific status.
    * @param code The status code.
    * @param message An arbitrary status message.
