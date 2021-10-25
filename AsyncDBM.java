@@ -35,10 +35,10 @@ public class AsyncDBM {
   /**
    * Constructor.
    * @param dbm A database object which has been opened.
-   * @param num_worker_threads The number of threads in the internal thread pool.
+   * @param numWorkerThreads The number of threads in the internal thread pool.
    */
-  public AsyncDBM(DBM dbm, int num_worker_threads) {
-    initialize(dbm, num_worker_threads);
+  public AsyncDBM(DBM dbm, int numWorkerThreads) {
+    initialize(dbm, numWorkerThreads);
   }
 
   /**
@@ -46,7 +46,7 @@ public class AsyncDBM {
    * @param dbm A database object which has been opened.
    * @param num_worker_threads The number of threads in the internal thread pool.
    */
-  private native void initialize(DBM dbm, int num_worker_threads);
+  private native void initialize(DBM dbm, int numWorkerThreads);
 
   /**
    * Destructs the object and releases resources.
@@ -309,8 +309,8 @@ public class AsyncDBM {
 
   /**
    * Changes the key of a record.
-   * @param old_key The old key of the record.
-   * @param new_key The new key of the record.
+   * @param oldKey The old key of the record.
+   * @param newKey The new key of the record.
    * @param overwrite Whether to overwrite the existing record of the new key.
    * @param copying Whether to retain the record of the old key.
    * @return The future for the result status.  If there's no matching record to the old key,
@@ -320,19 +320,19 @@ public class AsyncDBM {
    * the old key or the new key.  No intermediate states are observed.
    */
   public native Future<Status> rekey(
-      byte[] old_key, byte[] new_key, boolean overwrite, boolean copying);
+      byte[] oldKey, byte[] newKey, boolean overwrite, boolean copying);
 
   /**
    * Changes the key of a record, with string data.
-   * @param old_key The old key of the record.
-   * @param new_key The new key of the record.
+   * @param oldKey The old key of the record.
+   * @param newKey The new key of the record.
    * @param overwrite Whether to overwrite the existing record of the new key.
    * @param copying Whether to retain the record of the old key.
    * @return The future for the result status.
    */
-  public Future<Status> rekey(String old_key, String new_key, boolean overwrite, boolean copying) {
-    return rekey(old_key.getBytes(StandardCharsets.UTF_8),
-                 new_key.getBytes(StandardCharsets.UTF_8), overwrite, copying);
+  public Future<Status> rekey(String oldKey, String newKey, boolean overwrite, boolean copying) {
+    return rekey(oldKey.getBytes(StandardCharsets.UTF_8),
+                 newKey.getBytes(StandardCharsets.UTF_8), overwrite, copying);
   }
 
   /**
@@ -419,37 +419,37 @@ public class AsyncDBM {
 
   /**
    * Copies the content of the database file to another file.
-   * @param dest_path A path to the destination file.
-   * @param sync_hard True to do physical synchronization with the hardware.
+   * @param destPath A path to the destination file.
+   * @param syncHard True to do physical synchronization with the hardware.
    * @return The future for the result status.
    */
-  public native Future<Status> copyFileData(String dest_path, boolean sync_hard);
+  public native Future<Status> copyFileData(String destPath, boolean syncHard);
 
   /**
    * Exports all records to another database.
-   * @param dest_dbm The destination database.  The lefetime of the database object must last
+   * @param destDBM The destination database.  The lefetime of the database object must last
    * until the task finishes.
    * @return The future for the result status.
    */
-  public native Future<Status> export(DBM dest_dbm);
+  public native Future<Status> export(DBM destDBM);
 
   /**
    * Exports all records of a database to a flat record file.
-   * @param dest_file The file object to write records in.  The lefetime of the file object must
+   * @param destFile The file object to write records in.  The lefetime of the file object must
    * last until the task finishes.
    * @return The future for the result status.
    * @note A flat record file contains a sequence of binary records without any high level
    * structure so it is useful as a intermediate file for data migration.
    */
-  public native Future<Status> exportToFlatRecords(File dest_file);
+  public native Future<Status> exportToFlatRecords(File destFile);
 
   /**
    * Imports records to a database from a flat record file.
-   * @param src_file The file object to read records from.  The lefetime of the file object must
+   * @param srcFile The file object to read records from.  The lefetime of the file object must
    * last until the task finishes.
    * @return The future for the result status.
    */
-  public native Future<Status> importFromFlatRecords(File src_file);
+  public native Future<Status> importFromFlatRecords(File srcFile);
 
   /**
    * Searches the database and get keys which match a pattern.

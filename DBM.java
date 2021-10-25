@@ -512,8 +512,8 @@ public class DBM {
 
   /**
    * Changes the key of a record.
-   * @param old_key The old key of the record.
-   * @param new_key The new key of the record.
+   * @param oldKey The old key of the record.
+   * @param newKey The new key of the record.
    * @param overwrite Whether to overwrite the existing record of the new key.
    * @param copying Whether to retain the record of the old key.
    * @return The result status.  If there's no matching record to the old key, NOT_FOUND_ERROR
@@ -523,19 +523,19 @@ public class DBM {
    * the old key or the new key.  No intermediate states are observed.
    */
   public native Status rekey(
-      byte[] old_key, byte[] new_key, boolean overwrite, boolean copying);
+      byte[] oldKey, byte[] newKey, boolean overwrite, boolean copying);
 
   /**
    * Changes the key of a record, with string data.
-   * @param old_key The old key of the record.
-   * @param new_key The new key of the record.
+   * @param oldKey The old key of the record.
+   * @param newKey The new key of the record.
    * @param overwrite Whether to overwrite the existing record of the new key.
    * @param copying Whether to retain the record of the old key.
    * @return The result status.
    */
-  public Status rekey(String old_key, String new_key, boolean overwrite, boolean copying) {
-    return rekey(old_key.getBytes(StandardCharsets.UTF_8),
-                 new_key.getBytes(StandardCharsets.UTF_8), overwrite, copying);
+  public Status rekey(String oldKey, String newKey, boolean overwrite, boolean copying) {
+    return rekey(oldKey.getBytes(StandardCharsets.UTF_8),
+                 newKey.getBytes(StandardCharsets.UTF_8), overwrite, copying);
   }
 
   /**
@@ -685,43 +685,43 @@ public class DBM {
 
   /**
    * Copies the content of the database file to another file.
-   * @param dest_path A path to the destination file.
-   * @param sync_hard True to do physical synchronization with the hardware.
+   * @param destPath A path to the destination file.
+   * @param syncHard True to do physical synchronization with the hardware.
    * @return The result status.
    */
-  public native Status copyFileData(String dest_path, boolean sync_hard);
+  public native Status copyFileData(String destPath, boolean syncHard);
 
   /**
    * Exports all records to another database.
-   * @param dest_dbm The destination database.
+   * @param destDBM The destination database.
    * @return The result status.
    */
-  public native Status export(DBM dest_dbm);
+  public native Status export(DBM destDBM);
 
   /**
    * Exports all records of a database to a flat record file.
-   * @param dest_file The file object to write records in.
+   * @param destFile The file object to write records in.
    * @return The result status.
    * @note A flat record file contains a sequence of binary records without any high level
    * structure so it is useful as a intermediate file for data migration.
    */
-  public native Status exportToFlatRecords(File dest_file);
+  public native Status exportToFlatRecords(File destFile);
 
   /**
    * Imports records to a database from a flat record file.
-   * @param src_file The file object to read records from.
+   * @param srcFile The file object to read records from.
    * @return The result status.
    */
-  public native Status importFromFlatRecords(File src_file);
+  public native Status importFromFlatRecords(File srcFile);
 
   /**
    * Exports the keys of all records as lines to a text file.
-   * @param dest_file The file object to write keys in.
+   * @param destFile The file object to write keys in.
    * @return The result status.
    * @note As the exported text file is smaller than the database file, scanning the text file
    * by the search method is often faster than scanning the whole database.
    */
-  public native Status exportKeysAsLines(File dest_file);
+  public native Status exportKeysAsLines(File destFile);
 
   /**
    * Inspects the database.
@@ -800,17 +800,17 @@ public class DBM {
 
   /**
    * Restores a broken database as a new healthy database.
-   * @param old_file_path The path of the broken database.
-   * @param new_file_path The path of the new database to be created.
-   * @param class_name The name of the database class.  If it is null or empty, the class is
+   * @param oldFilePath The path of the broken database.
+   * @param newFilePath The path of the new database to be created.
+   * @param className The name of the database class.  If it is null or empty, the class is
    * guessed from the file extension.
-   * @param end_offset The exclusive end offset of records to read.  Negative means unlimited.
+   * @param endOffset The exclusive end offset of records to read.  Negative means unlimited.
    * 0 means the size when the database is synched or closed properly.  Using a positive value
    * is not meaningful if the number of shards is more than one.
    * @return The result status.
    */
   public static native Status restoreDatabase(
-      String old_file_path, String new_file_path, String class_name, long end_offset);
+      String oldFilePath, String newFilePath, String className, long endOffset);
 
   /** The pointer to the native object */
   private long ptr_ = 0;
