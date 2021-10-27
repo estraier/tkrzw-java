@@ -168,8 +168,8 @@ public class Test {
     STDERR.printf("  export\n");
     STDERR.printf("  asyncdbm\n");
     STDERR.printf("  file\n");
-    STDERR.printf("  perf [--path num] [--iter num] [--threads num] [--params expr] [--random]\n");
-    STDERR.printf("  wicked [--path num] [--iter num] [--threads num] [--params expr]\n");
+    STDERR.printf("  perf [--path str] [--iter num] [--threads num] [--params srr] [--random]\n");
+    STDERR.printf("  wicked [--path str] [--iter num] [--threads num] [--params str]\n");
     STDERR.printf("\n");
     System.exit(1);
   }
