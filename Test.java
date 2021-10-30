@@ -587,7 +587,9 @@ public class Test {
       check(export_dbm.compareExchange("xyz", null, "abc").equals(Status.SUCCESS));
       check(export_dbm.compareExchange("xyz", DBM.ANY_STRING, DBM.ANY_STRING)
             .equals(Status.SUCCESS));
-      check(export_dbm.compareExchange("xyz", "abc", "def").equals(Status.SUCCESS));
+      check(export_dbm.get("xyz").equals("abc"));
+      check(export_dbm.compareExchange("xyz", DBM.ANY_STRING, "def").equals(Status.SUCCESS));
+      check(export_dbm.get("xyz").equals("def"));
       check(export_dbm.compareExchange("xyz", DBM.ANY_STRING, null).equals(Status.SUCCESS));
       check(export_dbm.get("xyz") == null);
       check(export_iter.first().equals(Status.SUCCESS));
