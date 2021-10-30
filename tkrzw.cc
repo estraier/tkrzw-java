@@ -89,7 +89,7 @@ jclass cls_asyncdbm;
 jfieldID id_asyncdbm_ptr;
 jclass cls_file;
 jfieldID id_file_ptr;
-jobject dbm_any_bytes;
+jobject obj_dbm_any_bytes;
 
 // Makes the global class reference.
 jclass MakeClassRef(JNIEnv* env, const char* class_name) {
@@ -157,9 +157,9 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved) {
   id_asyncdbm_ptr = env->GetFieldID(cls_asyncdbm, "ptr_", "J");
   cls_file = MakeClassRef(env, "tkrzw/File");
   id_file_ptr = env->GetFieldID(cls_file, "ptr_", "J");
-  const jfieldID id_dbm_any_bytes = env->GetStaticFieldID(cls_dbm, "ANY_BYTES", "[B");
-  dbm_any_bytes = env->NewGlobalRef(env->NewByteArray(0));
-  env->SetStaticObjectField(cls_dbm, id_dbm_any_bytes, dbm_any_bytes);
+  const jfieldID id_obj_dbm_any_bytes = env->GetStaticFieldID(cls_dbm, "ANY_BYTES", "[B");
+  obj_dbm_any_bytes = env->NewGlobalRef(env->NewByteArray(0));
+  env->SetStaticObjectField(cls_dbm, id_obj_dbm_any_bytes, obj_dbm_any_bytes);
   return jni_version;
 }
 
@@ -444,7 +444,7 @@ static std::vector<std::pair<std::string_view, std::string_view>> ExtractSVPairs
       std::string_view key_view = placeholder->back();
       std::string_view value_view;
       if (jvalue != nullptr) {
-        if (env->IsSameObject(jvalue, dbm_any_bytes)) {
+        if (env->IsSameObject(jvalue, obj_dbm_any_bytes)) {
           value_view = tkrzw::DBM::ANY_DATA;
         } else {
           SoftByteArray value(env, jvalue);
@@ -1197,7 +1197,7 @@ JNIEXPORT jobject JNICALL Java_tkrzw_DBM_compareExchange
   std::unique_ptr<SoftByteArray> expected;
   std::string_view expected_view;
   if (jexpected != nullptr) {
-    if (env->IsSameObject(jexpected, dbm_any_bytes)) {
+    if (env->IsSameObject(jexpected, obj_dbm_any_bytes)) {
       expected_view = tkrzw::DBM::ANY_DATA;
     } else {
       expected = std::make_unique<SoftByteArray>(env, jexpected);
@@ -1207,7 +1207,7 @@ JNIEXPORT jobject JNICALL Java_tkrzw_DBM_compareExchange
   std::unique_ptr<SoftByteArray> desired;
   std::string_view desired_view;
   if (jdesired != nullptr) {
-    if (env->IsSameObject(jdesired, dbm_any_bytes)) {
+    if (env->IsSameObject(jdesired, obj_dbm_any_bytes)) {
       desired_view = tkrzw::DBM::ANY_DATA;
     } else {
       desired = std::make_unique<SoftByteArray>(env, jdesired);
@@ -2254,7 +2254,7 @@ JNIEXPORT jobject JNICALL Java_tkrzw_AsyncDBM_compareExchange
   std::unique_ptr<SoftByteArray> expected;
   std::string_view expected_view;
   if (jexpected != nullptr) {
-    if (env->IsSameObject(jexpected, dbm_any_bytes)) {
+    if (env->IsSameObject(jexpected, obj_dbm_any_bytes)) {
       expected_view = tkrzw::DBM::ANY_DATA;
     } else {
       expected = std::make_unique<SoftByteArray>(env, jexpected);
@@ -2264,7 +2264,7 @@ JNIEXPORT jobject JNICALL Java_tkrzw_AsyncDBM_compareExchange
   std::unique_ptr<SoftByteArray> desired;
   std::string_view desired_view;
   if (jdesired != nullptr) {
-    if (env->IsSameObject(jdesired, dbm_any_bytes)) {
+    if (env->IsSameObject(jdesired, obj_dbm_any_bytes)) {
       desired_view = tkrzw::DBM::ANY_DATA;
     } else {
       desired = std::make_unique<SoftByteArray>(env, jdesired);
