@@ -582,6 +582,14 @@ public class Test {
       check(export_dbm.compareExchange("1", null, "yyy").equals(Status.INFEASIBLE_ERROR));
       check(export_dbm.get("1").equals("zzz"));
       check(export_dbm.compareExchange("1", "zzz", null).equals(Status.SUCCESS));
+      check(export_dbm.compareExchange("xyz", DBM.ANY_STRING, DBM.ANY_STRING)
+            .equals(Status.INFEASIBLE_ERROR));
+      check(export_dbm.compareExchange("xyz", null, "abc").equals(Status.SUCCESS));
+      check(export_dbm.compareExchange("xyz", DBM.ANY_STRING, DBM.ANY_STRING)
+            .equals(Status.SUCCESS));
+      check(export_dbm.compareExchange("xyz", "abc", "def").equals(Status.SUCCESS));
+      check(export_dbm.compareExchange("xyz", DBM.ANY_STRING, null).equals(Status.SUCCESS));
+      check(export_dbm.get("xyz") == null);
       check(export_iter.first().equals(Status.SUCCESS));
       check(export_iter.set("foobar").equals(Status.SUCCESS));
       check(export_iter.remove().equals(Status.SUCCESS));
@@ -605,6 +613,17 @@ public class Test {
           makeStrMap("hop", null, "step", null)).equals(Status.SUCCESS));
       check(export_dbm.get("hop") == null);
       check(export_dbm.get("step") == null);
+      check(export_dbm.compareExchangeMultiString(
+          makeStrMap("xyz", DBM.ANY_STRING), makeStrMap("xyz", "abc"))
+            .equals(Status.INFEASIBLE_ERROR));
+      check(export_dbm.compareExchangeMultiString(
+          makeStrMap("xyz", null), makeStrMap("xyz", "abc")).equals(Status.SUCCESS));
+      check(export_dbm.compareExchangeMultiString(
+          makeStrMap("xyz", DBM.ANY_STRING), makeStrMap("xyz", "def")).equals(Status.SUCCESS));
+      check(export_dbm.get("xyz").equals("def"));
+      check(export_dbm.compareExchangeMultiString(
+          makeStrMap("xyz", DBM.ANY_STRING), makeStrMap("xyz", null)).equals(Status.SUCCESS));
+      check(export_dbm.get("xyz") == null);
       check(export_dbm.count() == 0);
       check(export_dbm.append("foo", "bar", ",").equals(Status.SUCCESS));
       check(export_dbm.append("foo", "baz", ",").equals(Status.SUCCESS));
@@ -1121,6 +1140,16 @@ public class Test {
     check(async.compareExchange("japan", "tokyo", "kyoto").get().equals(Status.SUCCESS));
     check(dbm.get("japan").equals("kyoto"));
     check(async.compareExchange("japan", "kyoto", null).get().equals(Status.SUCCESS));
+    check(async.compareExchange("xyz", DBM.ANY_STRING, DBM.ANY_STRING)
+          .get().equals(Status.INFEASIBLE_ERROR));
+    check(async.compareExchange("xyz", null, "abc").get().equals(Status.SUCCESS));
+    check(async.compareExchange("xyz", DBM.ANY_STRING, DBM.ANY_STRING)
+          .get().equals(Status.SUCCESS));
+    check(dbm.get("xyz").equals("abc"));
+    check(async.compareExchange("xyz", "abc", "def").get().equals(Status.SUCCESS));
+    check(dbm.get("xyz").equals("def"));
+    check(async.compareExchange("xyz", DBM.ANY_STRING, null).get().equals(Status.SUCCESS));
+    check(dbm.get("xyz") == null);
     check(dbm.count() == 0);
     check(async.compareExchangeMultiString(
         makeStrMap("one", null, "two", null),
@@ -1133,6 +1162,18 @@ public class Test {
     check(async.compareExchangeMultiString(
         makeStrMap("one", "11", "two", "22"),
         makeStrMap("one", null, "two", null)).get().equals(Status.SUCCESS));
+    check(async.compareExchangeMultiString(
+        makeStrMap("xyz", DBM.ANY_STRING), makeStrMap("xyz", "abc"))
+          .get().equals(Status.INFEASIBLE_ERROR));
+    check(async.compareExchangeMultiString(
+        makeStrMap("xyz", null), makeStrMap("xyz", "abc")).get().equals(Status.SUCCESS));
+    check(async.compareExchangeMultiString(
+        makeStrMap("xyz", DBM.ANY_STRING), makeStrMap("xyz", "def"))
+          .get().equals(Status.SUCCESS));
+    check(dbm.get("xyz").equals("def"));
+    check(async.compareExchangeMultiString(
+        makeStrMap("xyz", DBM.ANY_STRING), makeStrMap("xyz", null))
+          .get().equals(Status.SUCCESS));
     check(dbm.count() == 0);
     Future<Status.And<Long>> incr_future = async.increment("num", 5, 100);
     Status.And<Long> incr_result = incr_future.get();
