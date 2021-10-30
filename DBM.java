@@ -31,12 +31,12 @@ public class DBM {
   }
 
   /**
-   * Special bytes value for no-operation or any data.
+   * The special bytes value for no-operation or any data.
    */
   static public byte[] ANY_BYTES;
 
   /**
-   * Special string value for no-operation or any data.
+   * The special string value for no-operation or any data.
    */
   static public String ANY_STRING = new String("\0");
 
