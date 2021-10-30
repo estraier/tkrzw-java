@@ -1148,7 +1148,7 @@ public class Test {
     check(async.compareExchange("xyz", DBM.ANY_STRING, DBM.ANY_STRING)
           .get().equals(Status.SUCCESS));
     check(dbm.get("xyz").equals("abc"));
-    check(async.compareExchange("xyz", "abc", "def").get().equals(Status.SUCCESS));
+    check(async.compareExchange("xyz", DBM.ANY_STRING, "def").get().equals(Status.SUCCESS));
     check(dbm.get("xyz").equals("def"));
     check(async.compareExchange("xyz", DBM.ANY_STRING, null).get().equals(Status.SUCCESS));
     check(dbm.get("xyz") == null);
