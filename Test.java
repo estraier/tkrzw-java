@@ -592,6 +592,15 @@ public class Test {
       check(export_dbm.get("xyz").equals("def"));
       check(export_dbm.compareExchange("xyz", DBM.ANY_STRING, null).equals(Status.SUCCESS));
       check(export_dbm.get("xyz") == null);
+      sv = export_dbm.compareExchangeAndGet("xyz", null, "123");
+      check(sv.status.equals(Status.SUCCESS));
+      check(sv.value == null);
+      sv = export_dbm.compareExchangeAndGet("xyz", "123", DBM.ANY_STRING);
+      check(sv.status.equals(Status.SUCCESS));
+      check(sv.value.equals("123"));
+      sv = export_dbm.compareExchangeAndGet("xyz", DBM.ANY_STRING, null);
+      check(sv.status.equals(Status.SUCCESS));
+      check(sv.value.equals("123"));
       check(export_iter.first().equals(Status.SUCCESS));
       check(export_iter.set("foobar").equals(Status.SUCCESS));
       check(export_iter.remove().equals(Status.SUCCESS));

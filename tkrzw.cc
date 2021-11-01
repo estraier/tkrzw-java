@@ -1218,6 +1218,51 @@ JNIEXPORT jobject JNICALL Java_tkrzw_DBM_compareExchange
   return NewStatus(env, status);
 }
 
+// Implementation of DBM#compareExchangeAndGet.
+JNIEXPORT jobject JNICALL Java_tkrzw_DBM_compareExchangeAndGet
+(JNIEnv* env, jobject jself, jbyteArray jkey, jbyteArray jexpected, jbyteArray jdesired) {
+  tkrzw::ParamDBM* dbm = GetDBM(env, jself);
+  if (dbm == nullptr) {
+    ThrowIllegalArgument(env, "not opened database");
+    return nullptr;
+  }
+  if (jkey == nullptr) {
+    ThrowNullPointer(env);
+    return nullptr;
+  }
+  SoftByteArray key(env, jkey);
+  std::unique_ptr<SoftByteArray> expected;
+  std::string_view expected_view;
+  if (jexpected != nullptr) {
+    if (env->IsSameObject(jexpected, obj_dbm_any_bytes)) {
+      expected_view = tkrzw::DBM::ANY_DATA;
+    } else {
+      expected = std::make_unique<SoftByteArray>(env, jexpected);
+      expected_view = expected->Get();
+    }
+  }
+  std::unique_ptr<SoftByteArray> desired;
+  std::string_view desired_view;
+  if (jdesired != nullptr) {
+    if (env->IsSameObject(jdesired, obj_dbm_any_bytes)) {
+      desired_view = tkrzw::DBM::ANY_DATA;
+    } else {
+      desired = std::make_unique<SoftByteArray>(env, jdesired);
+      desired_view = desired->Get();
+    }
+  }
+  std::string actual;
+  bool found = false;
+  const tkrzw::Status status = dbm->CompareExchange(
+      key.Get(), expected_view, desired_view, &actual, &found);
+  jobject jstatus = NewStatus(env, status);
+  jbyteArray jactual = found ? NewByteArray(env, actual) : nullptr;
+  jobject jand = env->NewObject(cls_status_and, id_status_and_init);
+  env->SetObjectField(jand, id_status_and_status, jstatus);
+  env->SetObjectField(jand, id_status_and_value, jactual);
+  return jand;
+}
+
 // Implementation of DBM#increment.
 JNIEXPORT jlong JNICALL Java_tkrzw_DBM_increment
 (JNIEnv* env, jobject jself, jbyteArray jkey, jlong inc, jlong init, jobject jstatus) {

@@ -472,6 +472,51 @@ public class DBM {
   }
 
   /**
+   * Does compare-and-exchange and/or gets the old value of the record.
+   * @param key The key of the record.
+   * @param expected The expected value.  If it is null, no existing record is expected.  If it
+   * is ANY_BYTES, an existing record with any value is expacted.
+   * @param desired The desired value.  If it is null, the record is to be removed.  If it is
+   * ANY_BYTES, no update is done.
+   * @return The result status and the.old value of the record  If the condition doesn't meet,
+   * the state is INFEASIBLE_ERROR.  If there's no existing record, the value is null.
+   */
+  public native Status.And<byte[]> compareExchangeAndGet(
+      byte[] key, byte[] expected, byte[] desired);
+
+  /**
+   * Does compare-and-exchange and/or gets the old value of the record.
+   * @param key The key of the record.
+   * @param expected The expected value.  If it is null, no existing record is expected.  If it
+   * is ANY_STRING, an existing record with any value is expacted.
+   * @param desired The desired value.  If it is null, the record is to be removed.  If it is
+   * ANY_STRING, no update is done.
+   * @return The result status and the.old value of the record  If the condition doesn't meet,
+   * the state is INFEASIBLE_ERROR.  If there's no existing record, the value is null.
+   */
+  public Status.And<String> compareExchangeAndGet(String key, String expected, String desired) {
+    byte[] rawExpected = null;
+    if (expected == ANY_STRING) {
+      rawExpected = ANY_BYTES;
+    } else if (expected != null) {
+      rawExpected = expected.getBytes(StandardCharsets.UTF_8);
+    }
+    byte[] rawDesired = null;
+    if (desired == ANY_STRING) {
+      rawDesired = ANY_BYTES;
+    } else if (desired != null) {
+      rawDesired = desired.getBytes(StandardCharsets.UTF_8);
+    }
+    Status.And<byte[]> rawResult =
+        compareExchangeAndGet(key.getBytes(StandardCharsets.UTF_8), rawExpected, rawDesired);
+    Status.And<String> result = new Status.And<String>();
+    result.status = rawResult.status;
+    result.value = rawResult.value ==
+        null ? null : new String(rawResult.value,  StandardCharsets.UTF_8);
+    return result;
+  }
+
+  /**
    * Increments the numeric value of a record.
    * @param key The key of the record.
    * @param inc The incremental value.  If it is Long.MIN_VALUE, the current value is not changed
