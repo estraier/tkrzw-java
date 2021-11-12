@@ -722,6 +722,10 @@ public class Test {
       export_dbm.destruct();
       iter.destruct();
       check(dbm.close().equals(Status.Code.SUCCESS));
+      if (!path.isEmpty()) {
+        check(dbm.open(path, false, open_params).equals(Status.SUCCESS));
+        check(dbm.close().equals(Status.Code.SUCCESS));
+      }
       dbm.destruct();
     }
     STDOUT.printf("  ... OK\n");
