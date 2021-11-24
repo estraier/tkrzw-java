@@ -737,6 +737,23 @@ JNIEXPORT jobject JNICALL Java_tkrzw_DBM_close
   return NewStatus(env, status);
 }
 
+// Implementation of DBM#contains.
+JNIEXPORT jboolean JNICALL Java_tkrzw_DBM_contains
+(JNIEnv* env, jobject jself, jbyteArray jkey) {
+  tkrzw::ParamDBM* dbm = GetDBM(env, jself);
+  if (dbm == nullptr) {
+    ThrowIllegalArgument(env, "not opened database");
+    return false;
+  }
+  if (jkey == nullptr) {
+    ThrowNullPointer(env);
+    return false;
+  }
+  SoftByteArray key(env, jkey);
+  const tkrzw::Status status = dbm->Get(key.Get());
+  return status == tkrzw::Status::SUCCESS;
+}
+
 // Implementation of DBM#get.
 JNIEXPORT jbyteArray JNICALL Java_tkrzw_DBM_get___3BLtkrzw_Status_2
 (JNIEnv* env, jobject jself, jbyteArray jkey, jobject jstatus) {

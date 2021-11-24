@@ -200,6 +200,22 @@ public class DBM {
   public native Status close();
 
   /**
+   * Checks if a record exists or not.
+   * @param key The key of the record.
+   * @return True if the record exists, or false if not.
+   */
+  public native boolean contains(byte[] key);
+
+  /**
+   * Checks if a record exists or not, with string data.
+   * @param key The key of the record.
+   * @return True if the record exists, or false if not.
+   */
+  public boolean contains(String key) {
+    return contains(key.getBytes(StandardCharsets.UTF_8));
+  }
+
+  /**
    * Gets the value of a record of a key.
    * @param key The key of the record.
    * @param status The status object to store the result status.  If it is null, it is ignored.

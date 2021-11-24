@@ -562,7 +562,9 @@ public class Test {
       check(export_records.equals(records));
       check(export_dbm.clear().equals(Status.SUCCESS));
       check(export_dbm.count() == 0);
+      check(!export_dbm.contains("1"));
       check(export_dbm.set("1", "100").equals(Status.SUCCESS));
+      check(export_dbm.contains("1"));
       long cur_value = export_dbm.increment("10000", 2, 10000, status);
       check(status.equals(Status.SUCCESS));
       check(cur_value == 10002);
