@@ -104,6 +104,11 @@ public class Example1 {
     System.out.println(dbm.get("third"));
     System.out.println(dbm.get("fourth"));
 
+    // Checks and deletes a record.
+    if (dbm.contains("first")) {
+      dbm.remove("first");
+    }
+
     // Traverses records.
     // After using the iterator, it should be destructed explicitly.
     Iterator iter = dbm.makeIterator();
