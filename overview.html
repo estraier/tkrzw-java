@@ -240,6 +240,103 @@ public class Example3 {
 }
 </pre>
 
+<p>The following code uses process, processMulti, and processEach methods which take callback functions to process the record efficiently.  process is useful to update a record atomically according to the current value.  processEach is useful to access every record in the most efficient way.</p>
+
+<pre style="margin: 0em 0.8em; padding: 0.3em; background: #f8f8f8 none; border: 1px solid #dddddd; font-size: 90%;">import java.util.HashMap;
+import java.util.Map;
+import tkrzw.*;
+
+public class Example4 {
+  public static void main(String[] args) {
+    // Opens the database.
+    DBM dbm = new DBM();
+    dbm.open("casket.tkh", true, "truncate=True,num_buckets=100");
+
+    // Sets records with lambda functions.
+    dbm.process("doc-1", (k, v)-&gt;"Tokyo is the capital city of Japan.".getBytes(), true);
+    dbm.process("doc-2", (k, v)-&gt;"Is she living in Tokyo, Japan?".getBytes(), true);
+    dbm.process("doc-3", (k, v)-&gt;"She must leave Tokyo!".getBytes(), true);
+
+    // Lowers record values.
+    tkrzw.RecordProcessor lower = (key, value) -&gt; {
+      // If no matching record, None is given as the value.
+      if (value == null) return null;
+      // Sets the new value.
+      return new String(value).toLowerCase().getBytes();
+    };
+    dbm.process("doc-1", lower, true);
+    dbm.process("doc-2", lower, true);
+    dbm.process("doc-3", lower, true);
+    dbm.process("non-existent", lower, true);
+
+    // Adds multiple records at once.
+    RecordProcessor.WithKey[] ops1 = {
+      new RecordProcessor.WithKey("doc-4", (k, v)-&gt;"Tokyo Go!".getBytes()),
+      new RecordProcessor.WithKey("doc-5", (k, v)-&gt;"Japan Go!".getBytes()),
+    };
+    dbm.processMulti(ops1, true);
+
+    // Modifies multiple records at once.
+    RecordProcessor.WithKey[] ops2 = {
+      new RecordProcessor.WithKey("doc-4", lower),
+      new RecordProcessor.WithKey("doc-5", lower),
+    };
+    dbm.processMulti(ops2, true);
+
+    // Checks the whole content.
+    // This uses an external iterator and is relavively slow.
+    Iterator iter = dbm.makeIterator();
+    iter.first();
+    while (true) {
+      String[] record = iter.getString();
+      if (record == null) {
+        break;
+      }
+      System.out.println(record[0] + ": " + record[1]);
+      iter.next();
+    }
+    iter.destruct();
+
+    // Opertion for word counting.
+    Map&lt;String, Integer&gt; word_counts = new HashMap&lt;String, Integer&gt;();
+    RecordProcessor wordCounter = (key, value) -&gt; {
+      if (key == null) return null;
+      String[] words = new String(value).split("\\b");
+      for (String word : words) {
+        if (word.length() &lt; 1) continue;
+        char c = word.charAt(0);
+        if (c &lt; 'a' || c &gt; 'z') continue;
+        int old_count = word_counts.getOrDefault(word, 0);
+        word_counts.put(word, old_count + 1);
+      }
+      return null;
+    };
+
+    // The second parameter should be false if the value is not updated.
+    dbm.processEach(wordCounter, false);
+    for(Map.Entry&lt;String, Integer&gt; entry : word_counts.entrySet()) {
+      System.out.println(entry.getKey() + ":" + entry.getValue());
+    }
+
+    // Returning RecordProcessor.REMOVE by the callbacks removes the record.
+    dbm.process("doc-1", (k, v)-&gt;RecordProcessor.REMOVE, true);
+    System.out.println(dbm.count());
+    RecordProcessor.WithKey[] ops3 = {
+      new RecordProcessor.WithKey("doc-2", (k, v)-&gt;RecordProcessor.REMOVE),
+      new RecordProcessor.WithKey("doc-3", (k, v)-&gt;RecordProcessor.REMOVE),
+    };
+    dbm.processMulti(ops3, true);
+    System.out.println(dbm.count());
+    dbm.processEach((k, v)-&gt;RecordProcessor.REMOVE, true);
+    System.out.println(dbm.count());
+
+    // Closes the database.
+    dbm.close().orDie();
+    dbm.destruct();
+  }
+}
+</pre>
+
 </body>
 
 </html>
