@@ -205,26 +205,26 @@ public class DBM {
   /**
    * Processes a record with a processor.
    * @param key The key of the record.
-   * @param proc The pointer to the processor object.  Its "process" method is called.  The first
-   * parameter is the key of the record.  The second parameter is the value of the existing record,
+   * @param proc The processor object.  Its "process" method is called.  The first parameter is
+   * the key of the record.  The second parameter is the value of the existing record,
    * or null if it the record doesn't exist.  The return value is a byte array to update the
    * record value.  If the return value is null, the record is not modified.  If the return value
    * is REMOVE, the record is removed.
    * @param writable True if the processor can edit the record.
    * @return The result status.
-   * @note If the specified record exists, the ProcessFull of the processor is called.
-   * Otherwise, the ProcessEmpty of the processor is called.
    */
   public native Status process(byte[] key, RecordProcessor proc, boolean writable);
 
   /**
    * Processes a record with a processor.
    * @param key The key of the record.
-   * @param proc The pointer to the processor object.
+   * @param proc The processor object.  Its "process" method is called.  The first parameter is
+   * the key of the record.  The second parameter is the value of the existing record,
+   * or null if it the record doesn't exist.  The return value is a byte array to update the
+   * record value.  If the return value is null, the record is not modified.  If the return value
+   * is REMOVE, the record is removed.
    * @param writable True if the processor can edit the record.
    * @return The result status.
-   * @note If the specified record exists, the ProcessFull of the processor is called.
-   * Otherwise, the ProcessEmpty of the processor is called.
    */
   public Status process(String key, RecordProcessor proc, boolean writable) {
     return process(key.getBytes(StandardCharsets.UTF_8), proc, writable);
@@ -722,6 +722,20 @@ public class DBM {
   public Status pushLast(String value, double wtime) {
     return pushLast(value.getBytes(StandardCharsets.UTF_8), wtime);
   }
+
+  /**
+   * Processes each and every record in the database with a processor.
+   * @param proc The processor object.  Its "process" method is called.  The first parameter is
+   * the key of the record.  The second parameter is the value of the existing record,
+   * or null if it the record doesn't exist.  The return value is a byte array to update the
+   * record value.  If the return value is null, the record is not modified.  If the return value
+   * is REMOVE, the record is removed.
+   * @param writable True if the processor can edit the record.
+   * @return The result status.
+   * @note The given function is called repeatedly for each record.  It is also called once
+   * before the iteration and once after the iteration with both the key and the value being null.
+   */
+  public native Status processEach(RecordProcessor proc, boolean writable);
 
   /**
    * Gets the number of records.

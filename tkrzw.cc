@@ -307,6 +307,52 @@ class SoftByteArray {
   jboolean copied_;
 };
 
+// Wrapper to call a Java method as a C++ RecordProcessor.
+class SoftRecordProcessor final : public tkrzw::DBM::RecordProcessor {
+ public:
+  SoftRecordProcessor(JNIEnv* env, jobject jproc) : env_(env), jproc_(jproc) {}
+
+  std::string_view ProcessFull(std::string_view key, std::string_view value) override {
+    jbyteArray jkey = key.data() == NOOP.data() ? nullptr : NewByteArray(env_, key);
+    jbyteArray jvalue = NewByteArray(env_, value);
+    jbyteArray jrv =
+        (jbyteArray)env_->CallObjectMethod(jproc_, id_recproc_process, jkey, jvalue);
+    if (env_->ExceptionOccurred()) {
+      return NOOP;
+    }
+    if (jrv == nullptr) {
+      return NOOP;
+    }
+    if (env_->IsSameObject(jrv, obj_recproc_remove)) {
+      return REMOVE;
+    }
+    new_value_ = std::make_unique<SoftByteArray>(env_, jrv);
+    return new_value_->Get();
+  }
+
+  std::string_view ProcessEmpty(std::string_view key) override {
+    jbyteArray jkey = key.data() == NOOP.data() ? nullptr : NewByteArray(env_, key);
+    jbyteArray jrv =
+        (jbyteArray)env_->CallObjectMethod(jproc_, id_recproc_process, jkey, nullptr);
+    if (env_->ExceptionOccurred()) {
+      return NOOP;
+    }
+    if (jrv == nullptr) {
+      return NOOP;
+    }
+    if (env_->IsSameObject(jrv, obj_recproc_remove)) {
+      return REMOVE;
+    }
+    new_value_ = std::make_unique<SoftByteArray>(env_, jrv);
+    return new_value_->Get();
+  }
+
+ private:
+  JNIEnv* env_;
+  jobject jproc_;
+  std::unique_ptr<SoftByteArray> new_value_;
+};
+
 // Gets the future pointer of the Java future object.
 static tkrzw::StatusFuture* GetFuture(JNIEnv* env, jobject jfuture) {
   return (tkrzw::StatusFuture*)(intptr_t)env->GetLongField(jfuture, id_future_ptr);
@@ -758,48 +804,7 @@ JNIEXPORT jobject JNICALL Java_tkrzw_DBM_process
     return nullptr;
   }
   SoftByteArray key(env, jkey);
-  class Processor final : public tkrzw::DBM::RecordProcessor {
-   public:
-    Processor(JNIEnv* env, jobject jproc) : env_(env), jproc_(jproc) {}
-    std::string_view ProcessFull(std::string_view key, std::string_view value) override {
-      jbyteArray jkey = NewByteArray(env_, key);
-      jbyteArray jvalue = NewByteArray(env_, value);
-      jbyteArray jrv =
-          (jbyteArray)env_->CallObjectMethod(jproc_, id_recproc_process, jkey, jvalue);
-      if (env_->ExceptionOccurred()) {
-        return NOOP;
-      }
-      if (jrv == nullptr) {
-        return NOOP;
-      }
-      if (env_->IsSameObject(jrv, obj_recproc_remove)) {
-        return REMOVE;
-      }
-      new_value_ = std::make_unique<SoftByteArray>(env_, jrv);
-      return new_value_->Get();
-    }
-    std::string_view ProcessEmpty(std::string_view key) override {
-      jbyteArray jkey = NewByteArray(env_, key);
-      jbyteArray jrv =
-          (jbyteArray)env_->CallObjectMethod(jproc_, id_recproc_process, jkey, nullptr);
-      if (env_->ExceptionOccurred()) {
-        return NOOP;
-      }
-      if (jrv == nullptr) {
-        return NOOP;
-      }
-      if (env_->IsSameObject(jrv, obj_recproc_remove)) {
-        return REMOVE;
-      }
-      new_value_ = std::make_unique<SoftByteArray>(env_, jrv);
-      return new_value_->Get();
-    }
-   private:
-    JNIEnv* env_;
-    jobject jproc_;
-    std::unique_ptr<SoftByteArray> new_value_;
-  };
-  Processor proc(env, jproc);
+  SoftRecordProcessor proc(env, jproc);
   tkrzw::Status status = dbm->Process(key.Get(), &proc, writable);
   return NewStatus(env, status);
 }
@@ -1448,6 +1453,23 @@ JNIEXPORT jobject JNICALL Java_tkrzw_DBM_pushLast
   }
   SoftByteArray value(env, jvalue);
   const tkrzw::Status status = dbm->PushLast(value.Get(), wtime);
+  return NewStatus(env, status);
+}
+
+// Implementation of DBM#processEach.
+JNIEXPORT jobject JNICALL Java_tkrzw_DBM_processEach
+(JNIEnv* env, jobject jself, jobject jproc, jboolean writable) {
+  tkrzw::ParamDBM* dbm = GetDBM(env, jself);
+  if (dbm == nullptr) {
+    ThrowIllegalArgument(env, "not opened database");
+    return nullptr;
+  }
+  if (jproc == nullptr) {
+    ThrowNullPointer(env);
+    return nullptr;
+  }
+  SoftRecordProcessor proc(env, jproc);
+  tkrzw::Status status = dbm->ProcessEach(&proc, writable);
   return NewStatus(env, status);
 }
 

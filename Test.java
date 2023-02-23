@@ -776,6 +776,33 @@ public class Test {
                         true).equals(Status.Code.SUCCESS));
     }
     check(dbm.count() == 10);
+    final int[] counters = new int[2];
+    counters[0] = 0;
+    counters[1] = 0;
+    RecordProcessor proc3 = (k, v) -> {
+      if (v == null) {
+        counters[0]++;
+      } else {
+        counters[1]++;
+      }
+      return null;
+    };
+    check(dbm.processEach(proc3, false).equals(Status.Code.SUCCESS));
+    check(counters[0] == 2);
+    check(counters[1] == 10);
+    RecordProcessor proc4 = (k, v) -> {
+      if (k == null) return null;
+      double n = Integer.parseInt(new String(v));
+      return Integer.toString((int)Math.sqrt(n)).toString().getBytes();
+    };
+    check(dbm.processEach(proc4, true).equals(Status.Code.SUCCESS));
+    RecordProcessor proc5 = (k, v) -> {
+      if (k == null) return null;
+      check(Arrays.equals(k, v));
+      return RecordProcessor.REMOVE;
+    };
+    check(dbm.processEach(proc5, true).equals(Status.Code.SUCCESS));
+    check(dbm.count() == 0);
     check(dbm.close().equals(Status.SUCCESS));
     dbm.destruct();
     STDOUT.printf("  ... OK\n");
