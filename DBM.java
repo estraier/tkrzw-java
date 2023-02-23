@@ -32,13 +32,14 @@ public class DBM {
 
   /**
    * The special bytes value for no-operation or any data.
+   * @note The actual value is set by the native code.
    */
-  static public byte[] ANY_BYTES;
+  public static final byte[] ANY_BYTES = null;
 
   /**
    * The special string value for no-operation or any data.
    */
-  static public String ANY_STRING = new String("\0");
+  public static final String ANY_STRING = new String("\0");
 
   /**
    * Constructor.
@@ -200,6 +201,34 @@ public class DBM {
    * @return The result status.
    */
   public native Status close();
+
+  /**
+   * Processes a record with a processor.
+   * @param key The key of the record.
+   * @param proc The pointer to the processor object.  Its "process" method is called.  The first
+   * parameter is the key of the record.  The second parameter is the value of the existing record,
+   * or null if it the record doesn't exist.  The return value is a byte array to update the
+   * record value.  If the return value is null, the record is not modified.  If the return value
+   * is REMOVE, the record is removed.
+   * @param writable True if the processor can edit the record.
+   * @return The result status.
+   * @note If the specified record exists, the ProcessFull of the processor is called.
+   * Otherwise, the ProcessEmpty of the processor is called.
+   */
+  public native Status process(byte[] key, RecordProcessor proc, boolean writable);
+
+  /**
+   * Processes a record with a processor.
+   * @param key The key of the record.
+   * @param proc The pointer to the processor object.
+   * @param writable True if the processor can edit the record.
+   * @return The result status.
+   * @note If the specified record exists, the ProcessFull of the processor is called.
+   * Otherwise, the ProcessEmpty of the processor is called.
+   */
+  public Status process(String key, RecordProcessor proc, boolean writable) {
+    return process(key.getBytes(StandardCharsets.UTF_8), proc, writable);
+  }
 
   /**
    * Checks if a record exists or not.

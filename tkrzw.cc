@@ -74,6 +74,9 @@ jclass cls_status_and;
 jmethodID id_status_and_init;
 jfieldID id_status_and_status;
 jfieldID id_status_and_value;
+jclass cls_recproc;
+jobject obj_recproc_remove;
+jmethodID id_recproc_process;
 jclass cls_future;
 jmethodID id_future_init;
 jfieldID id_future_ptr;
@@ -142,6 +145,11 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved) {
   id_status_and_init = env->GetMethodID(cls_status_and, "<init>", "()V");
   id_status_and_status = env->GetFieldID(cls_status_and, "status", "Ltkrzw/Status;");
   id_status_and_value = env->GetFieldID(cls_status_and, "value", "Ljava/lang/Object;");
+  cls_recproc = MakeClassRef(env, "tkrzw/RecordProcessor");
+  const jfieldID id_obj_recproc_remove = env->GetStaticFieldID(cls_recproc, "REMOVE", "[B");
+  obj_recproc_remove = env->NewGlobalRef(env->NewByteArray(0));
+  env->SetStaticObjectField(cls_recproc, id_obj_recproc_remove, obj_recproc_remove);
+  id_recproc_process = env->GetMethodID(cls_recproc, "process", "([B[B)[B");
   cls_future = MakeClassRef(env, "tkrzw/Future");
   id_future_init = env->GetMethodID(cls_future, "<init>", "()V");
   id_future_ptr = env->GetFieldID(cls_future, "ptr_", "J");
@@ -734,6 +742,65 @@ JNIEXPORT jobject JNICALL Java_tkrzw_DBM_close
   const tkrzw::Status status = dbm->Close();
   delete dbm;
   SetDBM(env, jself, nullptr);
+  return NewStatus(env, status);
+}
+
+// Implementation of DBM#process.
+JNIEXPORT jobject JNICALL Java_tkrzw_DBM_process
+(JNIEnv* env, jobject jself, jbyteArray jkey, jobject jproc, jboolean writable) {
+  tkrzw::ParamDBM* dbm = GetDBM(env, jself);
+  if (dbm == nullptr) {
+    ThrowIllegalArgument(env, "not opened database");
+    return nullptr;
+  }
+  if (jkey == nullptr || jproc == nullptr) {
+    ThrowNullPointer(env);
+    return nullptr;
+  }
+  SoftByteArray key(env, jkey);
+  class Processor final : public tkrzw::DBM::RecordProcessor {
+   public:
+    Processor(JNIEnv* env, jobject jproc) : env_(env), jproc_(jproc) {}
+    std::string_view ProcessFull(std::string_view key, std::string_view value) override {
+      jbyteArray jkey = NewByteArray(env_, key);
+      jbyteArray jvalue = NewByteArray(env_, value);
+      jbyteArray jrv =
+          (jbyteArray)env_->CallObjectMethod(jproc_, id_recproc_process, jkey, jvalue);
+      if (env_->ExceptionOccurred()) {
+        return NOOP;
+      }
+      if (jrv == nullptr) {
+        return NOOP;
+      }
+      if (env_->IsSameObject(jrv, obj_recproc_remove)) {
+        return REMOVE;
+      }
+      new_value_ = std::make_unique<SoftByteArray>(env_, jrv);
+      return new_value_->Get();
+    }
+    std::string_view ProcessEmpty(std::string_view key) override {
+      jbyteArray jkey = NewByteArray(env_, key);
+      jbyteArray jrv =
+          (jbyteArray)env_->CallObjectMethod(jproc_, id_recproc_process, jkey, nullptr);
+      if (env_->ExceptionOccurred()) {
+        return NOOP;
+      }
+      if (jrv == nullptr) {
+        return NOOP;
+      }
+      if (env_->IsSameObject(jrv, obj_recproc_remove)) {
+        return REMOVE;
+      }
+      new_value_ = std::make_unique<SoftByteArray>(env_, jrv);
+      return new_value_->Get();
+    }
+   private:
+    JNIEnv* env_;
+    jobject jproc_;
+    std::unique_ptr<SoftByteArray> new_value_;
+  };
+  Processor proc(env, jproc);
+  tkrzw::Status status = dbm->Process(key.Get(), &proc, writable);
   return NewStatus(env, status);
 }
 

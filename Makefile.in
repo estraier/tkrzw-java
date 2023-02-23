@@ -103,6 +103,7 @@ check :
 	$(RUNENV) $(JAVARUN) $(JAVARUNFLAGS) tkrzw.Test utility
 	$(RUNENV) $(JAVARUN) $(JAVARUNFLAGS) tkrzw.Test status
 	$(RUNENV) $(JAVARUN) $(JAVARUNFLAGS) tkrzw.Test basic
+	$(RUNENV) $(JAVARUN) $(JAVARUNFLAGS) tkrzw.Test process
 	$(RUNENV) $(JAVARUN) $(JAVARUNFLAGS) tkrzw.Test iter
 	$(RUNENV) $(JAVARUN) $(JAVARUNFLAGS) tkrzw.Test thread
 	$(RUNENV) $(JAVARUN) $(JAVARUNFLAGS) tkrzw.Test search

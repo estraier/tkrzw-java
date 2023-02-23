@@ -49,6 +49,13 @@ public class Test {
       } finally {
         removeDirectory(tmp_dir_path);
       }
+    } else if (args[0].equals("process")) {
+      String tmp_dir_path = createTempDir();
+      try {
+        rv = runProcess(tmp_dir_path);
+      } finally {
+        removeDirectory(tmp_dir_path);
+      }
     } else if (args[0].equals("iter")) {
       String tmp_dir_path = createTempDir();
       try {
@@ -730,6 +737,47 @@ public class Test {
       }
       dbm.destruct();
     }
+    STDOUT.printf("  ... OK\n");
+    return 0;
+  }
+
+  /**
+   * Runs the basic test.
+   */
+  private static int runProcess(String tmp_dir_path) {
+    STDOUT.printf("Running process tests:\n");
+    String path = tmp_dir_path + java.io.File.separatorChar + "casket.tkh";
+    DBM dbm = new DBM();
+    check(dbm.open(path, true, Utility.parseParams("num_buckets=1000")).equals(Status.SUCCESS));
+    check(dbm.process("abc", (k, v)->null, true).equals(Status.Code.SUCCESS));
+    check(dbm.get("abc") == null);
+    check(dbm.process("abc", (k, v)->RecordProcessor.REMOVE, true).equals(Status.Code.SUCCESS));
+    check(dbm.get("abc") == null);
+    check(dbm.process("abc", (k, v)->"ABCDE".getBytes(), true).equals(Status.Code.SUCCESS));
+    check(dbm.get("abc").equals("ABCDE"));
+    RecordProcessor proc1 = (k, v) -> {
+      check(new String(k).equals("abc"));
+      check(new String(v).equals("ABCDE"));
+      return null;
+    };
+    check(dbm.process("abc", proc1, false).equals(Status.Code.SUCCESS));
+    check(dbm.process("abc", (k, v)->RecordProcessor.REMOVE, true).equals(Status.Code.SUCCESS));
+    check(dbm.get("abc") == null);
+    RecordProcessor proc2 = (k, v) -> {
+      check(new String(k).equals("abc"));
+      check(v == null);
+      return null;
+    };
+    check(dbm.process("abc", proc2, false).equals(Status.Code.SUCCESS));
+    for (int i = 0; i < 10; i++) {
+      final int ii = i;
+      check(dbm.process(Integer.toString(i),
+                        (k, v)->Integer.toString(ii * ii).getBytes(),
+                        true).equals(Status.Code.SUCCESS));
+    }
+    check(dbm.count() == 10);
+    check(dbm.close().equals(Status.SUCCESS));
+    dbm.destruct();
     STDOUT.printf("  ... OK\n");
     return 0;
   }
