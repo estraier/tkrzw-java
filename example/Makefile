@@ -8,7 +8,7 @@
 SHELL = /bin/sh
 
 # Targets
-MYCLASSES = Example1.class Example2.class Example3.class
+MYCLASSES = Example1.class Example2.class Example3.class Example4.class
 
 # Building binaries
 JAVAC = javac
@@ -37,6 +37,7 @@ run :
 	$(JAVARUN) $(JAVARUNFLAGS) Example1
 	$(JAVARUN) $(JAVARUNFLAGS) Example2
 	$(JAVARUN) $(JAVARUNFLAGS) Example3
+	$(JAVARUN) $(JAVARUNFLAGS) Example4
 
 clean :
 	rm -rf $(MYCLASSES) *.class casket* *~
