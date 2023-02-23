@@ -589,6 +589,18 @@ public class DBM {
   }
 
   /**
+   * Processes multiple records with processors.
+   * @param key_proc_pairs Pairs of the keys and their processor objects.  Their "process" method
+   * is called.  The first parameter is the key of the record.  The second parameter is the value
+   * of the existing record, or null if it the record doesn't exist.  The return value is a byte
+   * array to update the record value.  If the return value is null, the record is not modified.
+   * If the return value is REMOVE, the record is removed.
+   * @param writable True if the processors can edit the records.
+   * @return The result status.
+  */
+  public native Status processMulti(RecordProcessor.WithKey[] key_proc_pairs, boolean writable);
+
+  /**
    * Compares the values of records and exchanges if the condition meets.
    * @param expected The record keys and their expected values.  If the value is null, no existing
    * record is expected.  If the value is ANY_BYTES, an existing record with any value is

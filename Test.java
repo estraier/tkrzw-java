@@ -803,6 +803,30 @@ public class Test {
     };
     check(dbm.processEach(proc5, true).equals(Status.Code.SUCCESS));
     check(dbm.count() == 0);
+    RecordProcessor.WithKey[] ops1 = {
+      new RecordProcessor.WithKey("one", (k, v)->"hop".getBytes()),
+      new RecordProcessor.WithKey("two", (k, v)->"step".getBytes()),
+      new RecordProcessor.WithKey("three", (k, v)->"jump".getBytes()),
+    };
+    check(dbm.processMulti(ops1, true).equals(Status.Code.SUCCESS));
+    RecordProcessor twofold = (k, v) -> {
+      if (v == null) return "x".getBytes();
+      return (new String(v) + new String(v)).getBytes();
+    };
+    RecordProcessor.WithKey[] ops2 = {
+      new RecordProcessor.WithKey("one", (k, v)->RecordProcessor.REMOVE),
+      new RecordProcessor.WithKey("two", (k, v)->RecordProcessor.REMOVE),
+      new RecordProcessor.WithKey("three", twofold),
+      new RecordProcessor.WithKey("four", twofold),
+      new RecordProcessor.WithKey("three", twofold),
+      new RecordProcessor.WithKey("four", twofold),
+    };
+    check(dbm.processMulti(ops2, true).equals(Status.Code.SUCCESS));
+    check(dbm.count() == 2);
+    check(dbm.get("one") == null);
+    check(dbm.get("two") == null);
+    check(dbm.get("three").equals("jumpjumpjumpjump"));
+    check(dbm.get("four").equals("xx"));
     check(dbm.close().equals(Status.SUCCESS));
     dbm.destruct();
     STDOUT.printf("  ... OK\n");
