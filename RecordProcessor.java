@@ -46,7 +46,7 @@ public interface RecordProcessor {
       this.processor = processor;
       this.key = key;
     }
-    
+
     /**
      * Constructor.
      * @param key The key of the record to process.
