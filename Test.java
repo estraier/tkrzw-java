@@ -549,7 +549,7 @@ public class Test {
         if (class_name.equals("HashDBM") || class_name.equals("TreeDBM")) {
           String restored_path = copy_path + "-restored";
           check(DBM.restoreDatabase(
-              copy_path, restored_path, class_name, -1).equals(Status.SUCCESS));
+              copy_path, restored_path, class_name, -1, null).equals(Status.SUCCESS));
         }
       }
       DBM export_dbm = new DBM();

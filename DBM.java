@@ -100,7 +100,8 @@ public class DBM {
    * <li>record_comp_mode (string): How to compress the record data: "RECORD_COMP_NONE" to
    * do no compression, "RECORD_COMP_ZLIB" to compress with ZLib, "RECORD_COMP_ZSTD" to
    * compress with ZStd, "RECORD_COMP_LZ4" to compress with LZ4, "RECORD_COMP_LZMA" to
-   * compress with LZMA.
+   * compress with LZMA, "RECORD_COMP_RC4" to cipher with RC4, "RECORD_COMP_AES" to cipher
+   * with AES.
    * <li>offset_width (int): The width to represent the offset of records.
    * <li>align_pow (int): The power to align records.
    * <li>num_buckets (int): The number of buckets for hashing.
@@ -110,6 +111,7 @@ public class DBM {
    * <li>fbp_capacity (int): The capacity of the free block pool.
    * <li>min_read_size (int): The minimum reading size to read a record.
    * <li>cache_buckets (bool): True to cache the hash buckets on memory.
+   * <li>cipher_key (string): The encryption key for cipher compressors.
    * </ul>
    * <p>For TreeDBM, all optional parameters for HashDBM are available.  In addition, these
    * optional parameters are supported.
@@ -962,10 +964,13 @@ public class DBM {
    * @param endOffset The exclusive end offset of records to read.  Negative means unlimited.
    * 0 means the size when the database is synched or closed properly.  Using a positive value
    * is not meaningful if the number of shards is more than one.
+   * @param cipherKey The encryption key for cipher compressors.  If it is null, an empty key is
+   * used.
    * @return The result status.
    */
   public static native Status restoreDatabase(
-      String oldFilePath, String newFilePath, String className, long endOffset);
+      String oldFilePath, String newFilePath, String className,
+      long endOffset, byte[] cipherKey);
 
   /** The pointer to the native object */
   private long ptr_ = 0;

@@ -291,6 +291,7 @@ class SoftByteArray {
       size_ = env_->GetArrayLength(jary);
     } else {
       ary_ = nullptr;
+      size_ = 0;
     }
   }
 
@@ -1825,19 +1826,24 @@ JNIEXPORT jstring JNICALL Java_tkrzw_DBM_toString
 // Implementation of DBM#restoreDatabase.
 JNIEXPORT jobject JNICALL Java_tkrzw_DBM_restoreDatabase
 (JNIEnv* env, jclass jcls, jstring jold_file_path, jstring jnew_file_path,
- jstring jclass_name, jlong end_offset) {
+ jstring jclass_name, jlong end_offset, jbyteArray jcipher_key) {
   SoftString old_file_path(env, jold_file_path);
   SoftString new_file_path(env, jnew_file_path);
   SoftString class_name(env, jclass_name);
+  SoftByteArray cipher_key(env, jcipher_key);
+  std::string_view cipher_key_raw = cipher_key.Get();
+  if (cipher_key_raw.data() == nullptr) {
+    cipher_key_raw = "";
+  }
   tkrzw::Status status(tkrzw::Status::SUCCESS);
   int32_t num_shards = 0;
   if (tkrzw::ShardDBM::GetNumberOfShards(old_file_path.Get(), &num_shards) ==
       tkrzw::Status::SUCCESS) {
     status = tkrzw::ShardDBM::RestoreDatabase(
-        old_file_path.Get(), new_file_path.Get(), class_name.Get(), end_offset);
+        old_file_path.Get(), new_file_path.Get(), class_name.Get(), end_offset, cipher_key_raw);
   } else {
     status = tkrzw::PolyDBM::RestoreDatabase(
-        old_file_path.Get(), new_file_path.Get(), class_name.Get(), end_offset);
+        old_file_path.Get(), new_file_path.Get(), class_name.Get(), end_offset, cipher_key_raw);
   }
   return NewStatus(env, status);
 }
