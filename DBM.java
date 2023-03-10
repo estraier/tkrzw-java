@@ -964,8 +964,8 @@ public class DBM {
    * @param endOffset The exclusive end offset of records to read.  Negative means unlimited.
    * 0 means the size when the database is synched or closed properly.  Using a positive value
    * is not meaningful if the number of shards is more than one.
-   * @param cipherKey The encryption key for cipher compressors.  If it is null, an empty key is
-   * used.
+   * @param cipherKey The encryption key for cipher compressors.  If it is null, an empty key
+   * is used.
    * @return The result status.
    */
   public static native Status restoreDatabase(
