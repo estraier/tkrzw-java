@@ -98,6 +98,13 @@ public class Test {
       } finally {
         removeDirectory(tmp_dir_path);
       }
+    } else if (args[0].equals("index")) {
+      String tmp_dir_path = createTempDir();
+      try {
+        rv = runIndex(tmp_dir_path);
+      } finally {
+        removeDirectory(tmp_dir_path);
+      }
     } else if (args[0].equals("perf")) {
       String path = "";
       int num_iterations = 10000;
@@ -1401,8 +1408,100 @@ public class Test {
     check(file.getSize() == 512);
     str = file.readString(4, 7);
     check(str.equals("E12345F"));
+    check(file.toString().indexOf("tkrzw.File") == 0);
     check(file.close().equals(Status.SUCCESS));
     file.destruct();
+    STDOUT.printf("  ... OK\n");
+    return 0;
+  }
+
+  /**
+   * Runs the index test.
+   */
+  private static int runIndex(String tmp_dir_path) {
+    STDOUT.printf("Running index tests:\n");
+    String path = tmp_dir_path + java.io.File.separatorChar + "casket.tkt";
+    Index index = new Index();
+    Map<String, String> params = Utility.parseParams("truncate=true,num_buckets=100");
+    check(index.open(path, true, params).equals(Status.SUCCESS));
+    check(index.toString().indexOf("tkrzw.Index") == 0);
+    check(!index.contains("single", "1"));
+    check(!index.contains("double", "11"));
+    check(index.add("single", "1").isOK());
+    check(index.add("double", "11").isOK());
+    check(index.contains("single", "1"));
+    check(index.contains("double", "11"));
+    check(index.add("single", "2").isOK());
+    check(index.add("double", "22").isOK());
+    check(index.add("triple", "222").isOK());
+    byte[][] values = index.getValues("single".getBytes(), 0);
+    check(values.length == 2);
+    check(new String(values[0]).equals("1"));
+    check(new String(values[1]).equals("2"));
+    String[] strValues = index.getValues("triple", 0);
+    check(strValues.length == 1);
+    check(strValues[0].equals("222"));
+    strValues = index.getValues("foo", 0);
+    check(strValues.length == 0);
+    check(index.remove("single", "1").isOK());
+    check(index.remove("double", "11").isOK());
+    check(!index.remove("triple", "x").isOK());
+    check(index.count() == 3);
+    check(index.synchronize(false).isOK());
+    check(index.rebuild().isOK());
+    check(index.count() == 3);
+    check(index.clear().isOK());
+    check(index.count() == 0);
+    check(index.isWritable());
+    check(index.add("first", "1").isOK());
+    check(index.add("second", "2").isOK());
+    check(index.add("third", "3").isOK());
+    IndexIterator iter = index.makeIterator();
+    check(iter.toString().indexOf("tkrzw.IndexIterator") == 0);
+    iter.first();
+    byte[][] record_raw = iter.get();
+    check(record_raw != null);
+    check(new String(record_raw[0]).equals("first"));
+    check(new String(record_raw[1]).equals("1"));
+    iter.next();
+    String[] record = iter.getString();
+    check(record != null);
+    check(record[0].equals("second"));
+    check(record[1].equals("2"));
+    iter.next();
+    record = iter.getString();
+    check(record != null);
+    check(record[0].equals("third"));
+    check(record[1].equals("3"));
+    iter.next();
+    record = iter.getString();
+    check(record == null);
+    iter.last();
+    record_raw = iter.get();
+    check(record_raw != null);
+    check(new String(record_raw[0]).equals("third"));
+    check(new String(record_raw[1]).equals("3"));
+    iter.previous();
+    record = iter.getString();
+    check(record != null);
+    check(record[0].equals("second"));
+    check(record[1].equals("2"));
+    iter.previous();
+    record = iter.getString();
+    check(record != null);
+    check(record[0].equals("first"));
+    check(record[1].equals("1"));
+    iter.previous();
+    record = iter.getString();
+    check(record == null);
+    iter.jump("second", "");
+    record = iter.getString();
+    check(record != null);
+    check(record[0].equals("second"));
+    check(record[1].equals("2"));
+    iter.destruct();
+    check(index.close().equals(Status.SUCCESS));
+    index.destruct();
     STDOUT.printf("  ... OK\n");
     return 0;
   }

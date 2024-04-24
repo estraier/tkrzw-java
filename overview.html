@@ -337,6 +337,57 @@ public class Example4 {
 }
 </pre>
 
+<p>The following code is an example to use a secondary index, which is useful to organize records by non-primary keys.</p>
+
+<pre style="margin: 0em 0.8em; padding: 0.3em; background: #f8f8f8 none; border: 1px solid #dddddd; font-size: 90%;">import java.util.HashMap;
+import java.util.Map;
+import tkrzw.*;
+
+public class Example5 {
+  public static void main(String[] args) {
+    // Opens the index.
+    Index index = new Index();
+    index.open("casket.tkt", true, "truncate=True,num_buckets=100");
+
+    // Adds records to the index.
+    // The key is a division name and the value is person name.
+    index.add("general", "anne").orDie();
+    index.add("general", "matthew").orDie();
+    index.add("general", "marilla").orDie();
+    index.add("sales", "gilbert").orDie();
+
+    // Anne moves to the sales division.
+    index.remove("general", "anne").orDie();
+    index.add("sales", "anne").orDie();
+
+    // Prints all members for each division.
+    String[] divisions = {"general", "sales"};
+    for (String division : divisions) {
+      System.out.println(division);
+      String[] members = index.getValues(division, 0);
+      for (String member : members) {
+        System.out.println(" -- " + member);
+      }
+    }
+
+    // Prints every records by iterator.
+    IndexIterator iter = index.makeIterator();
+    iter.first();
+    while (true) {
+      String[] record = iter.getString();
+      if (record == null) break;
+      System.out.println(record[0] + ": " + record[1]);
+      iter.next();
+    }
+    iter.destruct();
+
+    // Closes the database.
+    index.close().orDie();
+    index.destruct();
+  }
+}
+</pre>
+
 </body>
 
 </html>

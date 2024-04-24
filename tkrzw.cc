@@ -30,6 +30,7 @@
 #include "tkrzw_file.h"
 #include "tkrzw_file_poly.h"
 #include "tkrzw_file_util.h"
+#include "tkrzw_index.h"
 #include "tkrzw_key_comparators.h"
 #include "tkrzw_lib_common.h"
 #include "tkrzw_str_util.h"
@@ -38,6 +39,8 @@
 #include "tkrzw_DBM.h"
 #include "tkrzw_File.h"
 #include "tkrzw_Future.h"
+#include "tkrzw_Index.h"
+#include "tkrzw_IndexIterator.h"
 #include "tkrzw_Iterator.h"
 #include "tkrzw_Utility.h"
 
@@ -95,6 +98,11 @@ jclass cls_asyncdbm;
 jfieldID id_asyncdbm_ptr;
 jclass cls_file;
 jfieldID id_file_ptr;
+jclass cls_index;
+jfieldID id_index_ptr;
+jclass cls_indexiter;
+jfieldID id_indexiter_ptr;
+jmethodID id_indexiter_init;
 jobject obj_dbm_any_bytes;
 
 // Makes the global class reference.
@@ -172,6 +180,11 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved) {
   id_asyncdbm_ptr = env->GetFieldID(cls_asyncdbm, "ptr_", "J");
   cls_file = MakeClassRef(env, "tkrzw/File");
   id_file_ptr = env->GetFieldID(cls_file, "ptr_", "J");
+  cls_index = MakeClassRef(env, "tkrzw/Index");
+  id_index_ptr = env->GetFieldID(cls_index, "ptr_", "J");
+  cls_indexiter = MakeClassRef(env, "tkrzw/IndexIterator");
+  id_indexiter_ptr = env->GetFieldID(cls_indexiter, "ptr_", "J");
+  id_indexiter_init = env->GetMethodID(cls_indexiter, "<init>", "(Ltkrzw/Index;)V");
   const jfieldID id_obj_dbm_any_bytes = env->GetStaticFieldID(cls_dbm, "ANY_BYTES", "[B");
   obj_dbm_any_bytes = env->NewGlobalRef(env->NewByteArray(0));
   env->SetStaticObjectField(cls_dbm, id_obj_dbm_any_bytes, obj_dbm_any_bytes);
@@ -381,12 +394,12 @@ static void SetDBM(JNIEnv* env, jobject jdbm, tkrzw::ParamDBM* dbm) {
   env->SetLongField(jdbm, id_dbm_ptr, (intptr_t)dbm);
 }
 
-// Gets the iterator pointer of the Java iterator object.
+// Gets the Iterator pointer of the Java Iterator object.
 static tkrzw::DBM::Iterator* GetIter(JNIEnv* env, jobject jiter) {
   return (tkrzw::DBM::Iterator*)(intptr_t)env->GetLongField(jiter, id_dbmiter_ptr);
 }
 
-// Sets the iterator pointer of the Java iterator object.
+// Sets the Iterator pointer of the Java Iterator object.
 static void SetIter(JNIEnv* env, jobject jiter, tkrzw::DBM::Iterator* iter) {
   env->SetLongField(jiter, id_dbmiter_ptr, (intptr_t)iter);
 }
@@ -401,14 +414,34 @@ static void SetAsyncDBM(JNIEnv* env, jobject jasyncdbm, tkrzw::AsyncDBM* asyncdb
   env->SetLongField(jasyncdbm, id_asyncdbm_ptr, (intptr_t)asyncdbm);
 }
 
-// Gets the file pointer of the Java text file object.
+// Gets the File pointer of the Java File object.
 static tkrzw::PolyFile* GetFile(JNIEnv* env, jobject jfile) {
   return (tkrzw::PolyFile*)(intptr_t)env->GetLongField(jfile, id_file_ptr);
 }
 
-// Sets the file pointer of the Java text file object.
+// Sets the File pointer of the Java File object.
 static void SetFile(JNIEnv* env, jobject jfile, tkrzw::PolyFile* file) {
   env->SetLongField(jfile, id_file_ptr, (intptr_t)file);
+}
+
+// Gets the Index pointer of the Java Index object.
+static tkrzw::PolyIndex* GetIndex(JNIEnv* env, jobject jindex) {
+  return (tkrzw::PolyIndex*)(intptr_t)env->GetLongField(jindex, id_index_ptr);
+}
+
+// Sets the Index pointer of the Java Index object.
+static void SetIndex(JNIEnv* env, jobject jindex, tkrzw::PolyIndex* index) {
+  env->SetLongField(jindex, id_index_ptr, (intptr_t)index);
+}
+
+// Gets the IndexIterator pointer of the Java IndexIterator object.
+static tkrzw::PolyIndex::Iterator* GetIndexIter(JNIEnv* env, jobject jiter) {
+  return (tkrzw::PolyIndex::Iterator*)(intptr_t)env->GetLongField(jiter, id_indexiter_ptr);
+}
+
+// Sets the IndexIterator pointer of the Java IndexIterator object.
+static void SetIndexIter(JNIEnv* env, jobject jiter, tkrzw::PolyIndex::Iterator* iter) {
+  env->SetLongField(jiter, id_indexiter_ptr, (intptr_t)iter);
 }
 
 // Converts a Java byte array map into a C++ string map.
@@ -3006,6 +3039,360 @@ JNIEXPORT jstring JNICALL Java_tkrzw_File_toString
                         ", size=", count);
   expr += ")";
   return NewString(env, expr.c_str());
+}
+
+// Implementation of Index#initialize.
+JNIEXPORT void JNICALL Java_tkrzw_Index_initialize
+(JNIEnv* env, jobject jself){
+  SetIndex(env, jself, nullptr);
+}
+
+// Implementation of Index#destruct.
+JNIEXPORT void JNICALL Java_tkrzw_Index_destruct
+(JNIEnv* env, jobject jself) {
+  tkrzw::PolyIndex* index = GetIndex(env, jself);
+  if (index != nullptr) {
+    delete index;
+    SetIndex(env, jself, nullptr);
+  }
+}
+
+// Implementation of Index#open.
+JNIEXPORT jobject JNICALL Java_tkrzw_Index_open
+(JNIEnv* env, jobject jself, jstring jpath, jboolean writable, jobject jparams) {
+  tkrzw::PolyIndex* index = GetIndex(env, jself);
+  if (index != nullptr) {
+    ThrowIllegalArgument(env, "opened index");
+    return nullptr;
+  }
+  if (jpath == nullptr) {
+    ThrowNullPointer(env);
+    return nullptr;
+  }
+  SoftString path(env, jpath);
+  std::map<std::string, std::string> params;
+  if (jparams != nullptr) {
+    params = JMapStrToCMap(env, jparams);
+  }
+  int32_t open_options = 0;
+  if (tkrzw::StrToBool(tkrzw::SearchMap(params, "truncate", "false"))) {
+    open_options |= tkrzw::File::OPEN_TRUNCATE;
+  }
+  if (tkrzw::StrToBool(tkrzw::SearchMap(params, "no_create", "false"))) {
+    open_options |= tkrzw::File::OPEN_NO_CREATE;
+  }
+  if (tkrzw::StrToBool(tkrzw::SearchMap(params, "no_wait", "false"))) {
+    open_options |= tkrzw::File::OPEN_NO_WAIT;
+  }
+  if (tkrzw::StrToBool(tkrzw::SearchMap(params, "no_lock", "false"))) {
+    open_options |= tkrzw::File::OPEN_NO_LOCK;
+  }
+  if (tkrzw::StrToBool(tkrzw::SearchMap(params, "sync_hard", "false"))) {
+    open_options |= tkrzw::File::OPEN_SYNC_HARD;
+  }
+  params.erase("truncate");
+  params.erase("no_create");
+  params.erase("no_wait");
+  params.erase("no_lock");
+  params.erase("sync_hard");
+  index = new tkrzw::PolyIndex();
+  const tkrzw::Status status = index->Open(path.Get(), writable, open_options, params);
+  if (status == tkrzw::Status::SUCCESS) {
+    SetIndex(env, jself, index);
+  } else {
+    delete index;
+  }
+  return NewStatus(env, status);
+}
+
+// Implementation of Index#close.
+JNIEXPORT jobject JNICALL Java_tkrzw_Index_close
+(JNIEnv* env, jobject jself) {
+  tkrzw::PolyIndex* index = GetIndex(env, jself);
+  if (index == nullptr) {
+    ThrowIllegalArgument(env, "not opened index");
+    return nullptr;
+  }
+  const tkrzw::Status status = index->Close();
+  delete index;
+  SetIndex(env, jself, nullptr);
+  return NewStatus(env, status);
+}
+
+// Implementation of Index#contains.
+JNIEXPORT jboolean JNICALL Java_tkrzw_Index_contains
+(JNIEnv* env, jobject jself, jbyteArray jkey, jbyteArray jvalue) {
+  tkrzw::PolyIndex* index = GetIndex(env, jself);
+  if (index == nullptr) {
+    ThrowIllegalArgument(env, "not opened index");
+    return false;
+  }
+  if (jkey == nullptr || jvalue == nullptr) {
+    ThrowNullPointer(env);
+    return false;
+  }
+  SoftByteArray key(env, jkey);
+  SoftByteArray value(env, jvalue);
+  return index->Check(key.Get(), value.Get());
+}
+
+// Implementation of Index#getValues.
+JNIEXPORT jobjectArray JNICALL Java_tkrzw_Index_getValues
+(JNIEnv* env, jobject jself, jbyteArray jkey, jint max) {
+  tkrzw::PolyIndex* index = GetIndex(env, jself);
+  if (index == nullptr) {
+    ThrowIllegalArgument(env, "not opened index");
+    return nullptr;
+  }
+  if (jkey == nullptr) {
+    ThrowNullPointer(env);
+    return nullptr;
+  }
+  SoftByteArray key(env, jkey);
+  const auto& values = index->GetValues(key.Get(), max);
+  jobjectArray jvalues = env->NewObjectArray(values.size(), cls_byteary, nullptr);
+  for (size_t i = 0; i < values.size(); i++) {
+    jbyteArray jvalue = NewByteArray(env, values[i]);
+    env->SetObjectArrayElement(jvalues, i, jvalue);
+  }
+  return jvalues;
+}
+
+// Implementation of Index#add.
+JNIEXPORT jobject JNICALL Java_tkrzw_Index_add
+(JNIEnv* env, jobject jself, jbyteArray jkey, jbyteArray jvalue) {
+  tkrzw::PolyIndex* index = GetIndex(env, jself);
+  if (index == nullptr) {
+    ThrowIllegalArgument(env, "not opened index");
+    return nullptr;
+  }
+  if (jkey == nullptr || jvalue == nullptr) {
+    ThrowNullPointer(env);
+    return nullptr;
+  }
+  SoftByteArray key(env, jkey);
+  SoftByteArray value(env, jvalue);
+  const tkrzw::Status status = index->Add(key.Get(), value.Get());
+  return NewStatus(env, status);
+}
+
+// Implementation of Index#remove.
+JNIEXPORT jobject JNICALL Java_tkrzw_Index_remove
+(JNIEnv* env, jobject jself, jbyteArray jkey, jbyteArray jvalue) {
+  tkrzw::PolyIndex* index = GetIndex(env, jself);
+  if (index == nullptr) {
+    ThrowIllegalArgument(env, "not opened index");
+    return nullptr;
+  }
+  if (jkey == nullptr || jvalue == nullptr) {
+    ThrowNullPointer(env);
+    return nullptr;
+  }
+  SoftByteArray key(env, jkey);
+  SoftByteArray value(env, jvalue);
+  const tkrzw::Status status = index->Remove(key.Get(), value.Get());
+  return NewStatus(env, status);
+}
+
+// Implementation of Index#count.
+JNIEXPORT jlong JNICALL Java_tkrzw_Index_count
+(JNIEnv* env, jobject jself) {
+  tkrzw::PolyIndex* index = GetIndex(env, jself);
+  if (index == nullptr) {
+    ThrowIllegalArgument(env, "not opened index");
+    return 0;
+  }
+  return index->Count();
+}
+
+// Implementation of Index#clear.
+JNIEXPORT jobject JNICALL Java_tkrzw_Index_clear
+(JNIEnv* env, jobject jself) {
+  tkrzw::PolyIndex* index = GetIndex(env, jself);
+  if (index == nullptr) {
+    ThrowIllegalArgument(env, "not opened index");
+    return nullptr;
+  }
+  const tkrzw::Status status = index->Clear();
+  return NewStatus(env, status);
+}
+
+// Implementation of Index#rebuild.
+JNIEXPORT jobject JNICALL Java_tkrzw_Index_rebuild
+(JNIEnv* env, jobject jself) {
+  tkrzw::PolyIndex* index = GetIndex(env, jself);
+  if (index == nullptr) {
+    ThrowIllegalArgument(env, "not opened index");
+    return nullptr;
+  }
+  const tkrzw::Status status = index->Rebuild();
+  return NewStatus(env, status);
+}
+
+// Implementation of Index#synchronize.
+JNIEXPORT jobject JNICALL Java_tkrzw_Index_synchronize
+(JNIEnv* env, jobject jself, jboolean hard) {
+  tkrzw::PolyIndex* index = GetIndex(env, jself);
+  if (index == nullptr) {
+    ThrowIllegalArgument(env, "not opened index");
+    return nullptr;
+  }
+  const tkrzw::Status status = index->Synchronize(hard);
+  return NewStatus(env, status);
+}
+
+// Implementation of Index#isOpen.
+JNIEXPORT jboolean JNICALL Java_tkrzw_Index_isOpen
+(JNIEnv* env, jobject jself) {
+  tkrzw::PolyIndex* index = GetIndex(env, jself);
+  if (index == nullptr) {
+    ThrowIllegalArgument(env, "not opened index");
+    return false;
+  }
+  return index->IsOpen();
+}
+
+// Implementation of Index#isWritable.
+JNIEXPORT jboolean JNICALL Java_tkrzw_Index_isWritable
+(JNIEnv* env, jobject jself) {
+  tkrzw::PolyIndex* index = GetIndex(env, jself);
+  if (index == nullptr) {
+    ThrowIllegalArgument(env, "not opened index");
+    return false;
+  }
+  return index->IsWritable();
+}
+
+// Implementation of Index#makeIterator.
+JNIEXPORT jobject JNICALL Java_tkrzw_Index_makeIterator
+(JNIEnv* env, jobject jself) {
+  return env->NewObject(cls_indexiter, id_indexiter_init, jself);
+}
+
+// Implementation of Index#toString.
+JNIEXPORT jstring JNICALL Java_tkrzw_Index_toString
+(JNIEnv* env, jobject jself) {
+  tkrzw::PolyIndex* index = GetIndex(env, jself);
+  std::string expr = "tkrzw.Index(";
+  if (index == nullptr) {
+    expr += "unopened";
+  } else {
+    expr += "opened";
+  }
+  expr += ")";
+  return NewString(env, expr.c_str());
+}
+
+// Implementation of IndexIterator#initialize.
+JNIEXPORT void JNICALL Java_tkrzw_IndexIterator_initialize
+(JNIEnv* env, jobject jself, jobject jindex) {
+  if (jindex == nullptr) {
+    ThrowNullPointer(env);
+    return;
+  }
+  tkrzw::PolyIndex* index = GetIndex(env, jindex);
+  if (index == nullptr) {
+    ThrowIllegalArgument(env, "not opened index");
+    return;
+  }
+  SetIndexIter(env, jself, index->MakeIterator().release());
+}
+
+// Implementation of IndexIterator#destruct.
+JNIEXPORT void JNICALL Java_tkrzw_IndexIterator_destruct
+(JNIEnv* env, jobject jself) {
+  tkrzw::PolyIndex::Iterator* iter = GetIndexIter(env, jself);
+  if (iter != nullptr) {
+    delete iter;
+    SetIndexIter(env, jself, nullptr);
+  }
+}
+
+// Implementation of IndexIterator#first.
+JNIEXPORT void JNICALL Java_tkrzw_IndexIterator_first
+(JNIEnv* env, jobject jself) {
+  tkrzw::PolyIndex::Iterator* iter = GetIndexIter(env, jself);
+  if (iter == nullptr) {
+    ThrowNullPointer(env);
+    return;
+  }
+  iter->First();
+}
+
+// Implementation of IndexIterator#last.
+JNIEXPORT void JNICALL Java_tkrzw_IndexIterator_last
+(JNIEnv* env, jobject jself) {
+  tkrzw::PolyIndex::Iterator* iter = GetIndexIter(env, jself);
+  if (iter == nullptr) {
+    ThrowNullPointer(env);
+    return;
+  }
+  iter->Last();
+}
+
+// Implementation of IndexIterator#jump.
+JNIEXPORT void JNICALL Java_tkrzw_IndexIterator_jump
+(JNIEnv* env, jobject jself, jbyteArray jkey, jbyteArray jvalue) {
+  tkrzw::PolyIndex::Iterator* iter = GetIndexIter(env, jself);
+  if (iter == nullptr) {
+    ThrowNullPointer(env);
+    return;
+  }
+  if (jkey == nullptr || jvalue == nullptr) {
+    ThrowNullPointer(env);
+    return;
+  }
+  SoftByteArray key(env, jkey);
+  SoftByteArray value(env, jvalue);
+  iter->Jump(key.Get(), value.Get());
+}
+
+// Implementation of IndexIterator#get.
+JNIEXPORT jobjectArray JNICALL Java_tkrzw_IndexIterator_get
+(JNIEnv* env, jobject jself) {
+  tkrzw::PolyIndex::Iterator* iter = GetIndexIter(env, jself);
+  if (iter == nullptr) {
+    ThrowNullPointer(env);
+    return nullptr;
+  }
+  std::string key, value;
+  if (iter->Get(&key, &value)) {
+    jobjectArray jrec = env->NewObjectArray(2, cls_byteary, nullptr);
+    jbyteArray jkey = NewByteArray(env, key);
+    jbyteArray jvalue = NewByteArray(env, value);
+    env->SetObjectArrayElement(jrec, 0, jkey);
+    env->SetObjectArrayElement(jrec, 1, jvalue);
+    return jrec;
+  }
+  return nullptr;
+}
+
+// Implementation of IndexIterator#next.
+JNIEXPORT void JNICALL Java_tkrzw_IndexIterator_next
+(JNIEnv* env, jobject jself) {
+  tkrzw::PolyIndex::Iterator* iter = GetIndexIter(env, jself);
+  if (iter == nullptr) {
+    ThrowNullPointer(env);
+    return;
+  }
+  iter->Next();
+}
+
+// Implementation of IndexIterator#previous.
+JNIEXPORT void JNICALL Java_tkrzw_IndexIterator_previous
+(JNIEnv* env, jobject jself) {
+  tkrzw::PolyIndex::Iterator* iter = GetIndexIter(env, jself);
+  if (iter == nullptr) {
+    ThrowNullPointer(env);
+    return;
+  }
+  iter->Previous();
+}
+
+// Implementation of IndexIterator#toString.
+JNIEXPORT jstring JNICALL Java_tkrzw_IndexIterator_toString
+(JNIEnv* env, jobject jself) {
+  return NewString(env, "tkrzw.IndexIterator()");
 }
 
 // END OF FILE
