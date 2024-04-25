@@ -84,7 +84,7 @@ public class Index {
   }
 
   /**
-   * Closes the database file.
+   * Closes the index file.
    * @return The result status.
    */
   public native Status close();
