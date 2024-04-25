@@ -19,9 +19,9 @@ import java.util.Map;
 /**
  * Secondary index interface.
  * @note All operations except for open and close are thread-safe; Multiple threads can access
- * the same database concurrently.  You can specify a data structure when you call the "open"
- * method.  Every opened database must be closed explicitly by the "close" method to avoid data
- * corruption.  Moreover, every unused database object should be destructed by the "destruct"
+ * the same dindex concurrently.  You can specify a data structure when you call the "open"
+ * method.  Every opened index must be closed explicitly by the "close" method to avoid data
+ * corruption.  Moreover, every unused index object should be destructed by the "destruct"
  * method to free resources.
  */
 public class Index {
@@ -43,7 +43,7 @@ public class Index {
 
   /**
    * Destructs the object and releases resources.
-   * @note The database is closed implicitly if it has not been closed.
+   * @note The index is closed implicitly if it has not been closed.
    */
   public native void destruct();
 
@@ -74,7 +74,7 @@ public class Index {
   }
 
   /**
-   * Opens a database file, without optional parameters.
+   * Opens an index file, without optional parameters.
    * @param path A path of the file.
    * @param writable If true, the file is writable.  If false, it is read-only.
    * @return The result status.
@@ -182,13 +182,13 @@ public class Index {
   public native Status clear();
 
   /**
-   * Rebuilds the entire database.
+   * Rebuilds the entire index.
    * @return The result status.
    */
   public native Status rebuild();
 
   /**
-   * Synchronizes the content of the database to the file system.
+   * Synchronizes the content of the index to the file system.
    * @param hard True to do physical synchronization with the hardware or false to do only
    * logical synchronization with the file system.
    * @return The result status.
@@ -196,14 +196,14 @@ public class Index {
   public native Status synchronize(boolean hard);
 
   /**
-   * Checks whether the database is open.
-   * @return True if the database is open, or false if not.
+   * Checks whether the index is open.
+   * @return True if the index is open, or false if not.
    */
   public native boolean isOpen();
 
   /**
-   * Checks whether the database is writable.
-   * @return True if the database is writable, or false if not.
+   * Checks whether the index is writable.
+   * @return True if the index is writable, or false if not.
    */
   public native boolean isWritable();
 
@@ -215,7 +215,7 @@ public class Index {
   public native IndexIterator makeIterator();
 
   /**
-   * Gets a string representation of the database.
+   * Gets a string representation of the index.
    */
   public native String toString();
 
