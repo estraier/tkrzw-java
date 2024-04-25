@@ -111,7 +111,7 @@ public class Index {
    * Gets all values of records of a key.
    * @param key The key to look for.
    * @param max The maximum number of values to get.  0 means unlimited.
-   * @return All values of the key.
+   * @return All values of the key.  An empty array is returned on failure.
    */
   public native byte[][] getValues(byte[] key, int max);
 
@@ -119,7 +119,7 @@ public class Index {
    * Gets all values of records of a key, with string data.
    * @param key The key to look for.
    * @param max The maximum number of values to get.  0 means unlimited.
-   * @return All values of the key.
+   * @return All values of the key.  An empty array is returned on failure.
    */
   public String[] getValues(String key, int max) {
     byte[][] values = getValues(key.getBytes(StandardCharsets.UTF_8), max);
