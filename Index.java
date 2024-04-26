@@ -177,7 +177,7 @@ public class Index {
 
   /**
    * Gets the path of the index file.
-   * @return path The file path of the index, or an empty string on failure.
+   * @return The file path of the index, or an empty string on failure.
    */
   public native String getFilePath();
 

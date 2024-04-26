@@ -765,7 +765,7 @@ public class DBM {
 
   /**
    * Gets the path of the database file.
-   * @return path The file path of the database, or null on failure.
+   * @return The file path of the database, or null on failure.
    */
   public native String getFilePath();
 
