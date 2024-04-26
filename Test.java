@@ -1447,6 +1447,7 @@ public class Test {
     check(index.remove("double", "11").isOK());
     check(!index.remove("triple", "x").isOK());
     check(index.count() == 3);
+    check(index.getFilePath().equals(path));
     check(index.synchronize(false).isOK());
     check(index.rebuild().isOK());
     check(index.count() == 3);

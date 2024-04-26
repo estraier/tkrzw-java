@@ -3200,9 +3200,21 @@ JNIEXPORT jlong JNICALL Java_tkrzw_Index_count
   tkrzw::PolyIndex* index = GetIndex(env, jself);
   if (index == nullptr) {
     ThrowIllegalArgument(env, "not opened index");
-    return 0;
+    return -1;
   }
   return index->Count();
+}
+
+// Implementation of Index#getFilePath.
+JNIEXPORT jstring JNICALL Java_tkrzw_Index_getFilePath
+(JNIEnv* env, jobject jself) {
+  tkrzw::PolyIndex* index = GetIndex(env, jself);
+  if (index == nullptr) {
+    ThrowIllegalArgument(env, "not opened index");
+    return nullptr;
+  }
+  const std::string path = index->GetFilePath();
+  return NewString(env, path.c_str());
 }
 
 // Implementation of Index#clear.
@@ -3277,7 +3289,9 @@ JNIEXPORT jstring JNICALL Java_tkrzw_Index_toString
   if (index == nullptr) {
     expr += "unopened";
   } else {
-    expr += "opened";
+    const std::string path = index->GetFilePath();
+    const int64_t count = index->Count();
+    expr += tkrzw::StrCat("path=", tkrzw::StrEscapeC(path, true), ", count=", count);
   }
   expr += ")";
   return NewString(env, expr.c_str());

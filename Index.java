@@ -171,9 +171,15 @@ public class Index {
 
   /**
    * Gets the number of records.
-   * @return The number of records.
+   * @return The number of records, or -1 on failure.
    */
   public native long count();
+
+  /**
+   * Gets the path of the index file.
+   * @return path The file path of the index, or an empty string on failure.
+   */
+  public native String getFilePath();
 
   /**
    * Removes all records.
