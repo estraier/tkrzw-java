@@ -53,7 +53,7 @@ public class Example5 {
     }
     iter.destruct();
 
-    // Closes the database.
+    // Closes the index.
     index.close().orDie();
     index.destruct();
   }
