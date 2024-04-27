@@ -19,7 +19,7 @@ import java.util.Map;
 
 /**
  * Polymorphic database manager.
- * @note All operations except for open and close are thread-safe; Multiple threads can access
+ * @note All operations except for "open" and "close" are thread-safe; Multiple threads can access
  * the same database concurrently.  You can specify a data structure when you call the "open"
  * method.  Every opened database must be closed explicitly by the "close" method to avoid data
  * corruption.  Moreover, every unused database object should be destructed by the "destruct"
