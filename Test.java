@@ -1461,6 +1461,7 @@ public class Test {
     IndexIterator iter = index.makeIterator();
     check(iter.toString().indexOf("tkrzw.IndexIterator") == 0);
     iter.first();
+    check(iter.toString().indexOf("tkrzw.IndexIterator") == 0);
     byte[][] record_raw = iter.get();
     check(record_raw != null);
     check(new String(record_raw[0]).equals("first"));
