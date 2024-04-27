@@ -19,7 +19,7 @@ public class Example5 {
   public static void main(String[] args) {
     // Opens the index.
     Index index = new Index();
-    index.open("casket.tkt", true, "truncate=True,num_buckets=100");
+    index.open("casket.tkt", true, "truncate=True,num_buckets=100").orDie();
 
     // Adds records to the index.
     // The key is a division name and the value is person name.

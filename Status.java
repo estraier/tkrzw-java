@@ -14,7 +14,7 @@
 package tkrzw;
 
 /**
- * Status of operations
+ * Status of operations.
  */
 public class Status {
   /**
