@@ -42,7 +42,7 @@ public class Example5 {
       }
     }
 
-    // Prints every records by iterator.
+    // Prints every record by iterator.
     IndexIterator iter = index.makeIterator();
     iter.first();
     while (true) {
