@@ -3406,7 +3406,19 @@ JNIEXPORT void JNICALL Java_tkrzw_IndexIterator_previous
 // Implementation of IndexIterator#toString.
 JNIEXPORT jstring JNICALL Java_tkrzw_IndexIterator_toString
 (JNIEnv* env, jobject jself) {
-  return NewString(env, "tkrzw.IndexIterator()");
+  tkrzw::PolyIndex::Iterator* iter = GetIndexIter(env, jself);
+  std::string expr = "tkrzw.IndexIterator(";
+  if (iter == nullptr) {
+    expr += "destructed";
+  } else {
+    std::string key;
+    if (!iter->Get(&key)) {
+      key = "(unlocated)";
+    }
+    expr += tkrzw::StrCat("key=", tkrzw::StrEscapeC(key, true));
+  }
+  expr += ")";
+  return NewString(env, expr.c_str());
 }
 
 // END OF FILE
