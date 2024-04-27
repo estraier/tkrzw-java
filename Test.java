@@ -1453,6 +1453,7 @@ public class Test {
     check(index.count() == 3);
     check(index.clear().isOK());
     check(index.count() == 0);
+    check(index.isOpen());
     check(index.isWritable());
     check(index.add("first", "1").isOK());
     check(index.add("second", "2").isOK());
