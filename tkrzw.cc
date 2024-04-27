@@ -3361,26 +3361,6 @@ JNIEXPORT void JNICALL Java_tkrzw_IndexIterator_jump
   iter->Jump(key.Get(), value.Get());
 }
 
-// Implementation of IndexIterator#get.
-JNIEXPORT jobjectArray JNICALL Java_tkrzw_IndexIterator_get
-(JNIEnv* env, jobject jself) {
-  tkrzw::PolyIndex::Iterator* iter = GetIndexIter(env, jself);
-  if (iter == nullptr) {
-    ThrowNullPointer(env);
-    return nullptr;
-  }
-  std::string key, value;
-  if (iter->Get(&key, &value)) {
-    jobjectArray jrec = env->NewObjectArray(2, cls_byteary, nullptr);
-    jbyteArray jkey = NewByteArray(env, key);
-    jbyteArray jvalue = NewByteArray(env, value);
-    env->SetObjectArrayElement(jrec, 0, jkey);
-    env->SetObjectArrayElement(jrec, 1, jvalue);
-    return jrec;
-  }
-  return nullptr;
-}
-
 // Implementation of IndexIterator#next.
 JNIEXPORT void JNICALL Java_tkrzw_IndexIterator_next
 (JNIEnv* env, jobject jself) {
@@ -3401,6 +3381,26 @@ JNIEXPORT void JNICALL Java_tkrzw_IndexIterator_previous
     return;
   }
   iter->Previous();
+}
+
+// Implementation of IndexIterator#get.
+JNIEXPORT jobjectArray JNICALL Java_tkrzw_IndexIterator_get
+(JNIEnv* env, jobject jself) {
+  tkrzw::PolyIndex::Iterator* iter = GetIndexIter(env, jself);
+  if (iter == nullptr) {
+    ThrowNullPointer(env);
+    return nullptr;
+  }
+  std::string key, value;
+  if (iter->Get(&key, &value)) {
+    jobjectArray jrec = env->NewObjectArray(2, cls_byteary, nullptr);
+    jbyteArray jkey = NewByteArray(env, key);
+    jbyteArray jvalue = NewByteArray(env, value);
+    env->SetObjectArrayElement(jrec, 0, jkey);
+    env->SetObjectArrayElement(jrec, 1, jvalue);
+    return jrec;
+  }
+  return nullptr;
 }
 
 // Implementation of IndexIterator#toString.

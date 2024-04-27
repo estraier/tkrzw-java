@@ -71,6 +71,16 @@ public class IndexIterator {
   }
 
   /**
+   * Moves the iterator to the next record.
+   */
+  public native void next();
+
+  /**
+   * Moves the iterator to the previous record.
+   */
+  public native void previous();
+
+  /**
    * Gets the key and the value of the current record of the iterator.
    * @return A pair of the key and the value of the current record, or null on failure.
    */
@@ -90,16 +100,6 @@ public class IndexIterator {
     str_record[1] = new String(record[1], StandardCharsets.UTF_8);
     return str_record;
   }
-
-  /**
-   * Moves the iterator to the next record.
-   */
-  public native void next();
-
-  /**
-   * Moves the iterator to the previous record.
-   */
-  public native void previous();
 
   /**
    * Gets a string representation of the iterator.
