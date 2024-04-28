@@ -101,7 +101,6 @@ public class Example4 {
 
     // Closes the database.
     dbm.close().orDie();
-    dbm.destruct();
   }
 }
 

@@ -55,7 +55,6 @@ public class Example5 {
 
     // Closes the index.
     index.close().orDie();
-    index.destruct();
   }
 }
 

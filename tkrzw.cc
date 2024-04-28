@@ -2782,8 +2782,7 @@ JNIEXPORT jstring JNICALL Java_tkrzw_AsyncDBM_toString
 // Implementation of File#initialize.
 JNIEXPORT void JNICALL Java_tkrzw_File_initialize
 (JNIEnv* env, jobject jself){
-  tkrzw::PolyFile* file = new tkrzw::PolyFile;
-  SetFile(env, jself, file);
+  SetFile(env, jself, nullptr);
 }
 
 // Implementation of File#destruct.
@@ -2800,7 +2799,11 @@ JNIEXPORT void JNICALL Java_tkrzw_File_destruct
 JNIEXPORT jobject JNICALL Java_tkrzw_File_open
 (JNIEnv* env, jobject jself, jstring jpath, jboolean writable, jobject jparams) {
   tkrzw::PolyFile* file = GetFile(env, jself);
-  if (file == nullptr || jpath == nullptr) {
+  if (file != nullptr) {
+    ThrowIllegalArgument(env, "opened file");
+    return nullptr;
+  }
+  if (jpath == nullptr) {
     ThrowNullPointer(env);
     return nullptr;
   }
@@ -2825,8 +2828,19 @@ JNIEXPORT jobject JNICALL Java_tkrzw_File_open
   if (tkrzw::StrToBool(tkrzw::SearchMap(params, "sync_hard", "false"))) {
     open_options |= tkrzw::File::OPEN_SYNC_HARD;
   }
+  params.erase("truncate");
+  params.erase("no_create");
+  params.erase("no_wait");
+  params.erase("no_lock");
+  params.erase("sync_hard");
+  file = new tkrzw::PolyFile;
   const tkrzw::Status status = file->OpenAdvanced(
       std::string(path.Get()), writable, open_options, params);
+  if (status == tkrzw::Status::SUCCESS) {
+    SetFile(env, jself, file);
+  } else {
+    delete file;
+  }
   return NewStatus(env, status);
 }
 
@@ -2835,10 +2849,12 @@ JNIEXPORT jobject JNICALL Java_tkrzw_File_close
 (JNIEnv* env, jobject jself) {
   tkrzw::PolyFile* file = GetFile(env, jself);
   if (file == nullptr) {
-    ThrowNullPointer(env);
+    ThrowIllegalArgument(env, "not opened file");
     return nullptr;
   }
   const tkrzw::Status status = file->Close();
+  delete file;
+  SetFile(env, jself, nullptr);
   return NewStatus(env, status);
 }
 
@@ -2848,7 +2864,7 @@ JNIEXPORT jobject JNICALL Java_tkrzw_File_read
 (JNIEnv* env, jobject jself, jlong off, jbyteArray jbuf, jlong size) {
   tkrzw::PolyFile* file = GetFile(env, jself);
   if (file == nullptr) {
-    ThrowNullPointer(env);
+    ThrowIllegalArgument(env, "not opened file");
     return nullptr;
   }
   if (jbuf == nullptr) {
@@ -2877,7 +2893,7 @@ JNIEXPORT jobject JNICALL Java_tkrzw_File_write
 (JNIEnv* env, jobject jself, jlong off, jbyteArray jbuf, jlong size) {
   tkrzw::PolyFile* file = GetFile(env, jself);
   if (file == nullptr) {
-    ThrowNullPointer(env);
+    ThrowIllegalArgument(env, "not opened file");
     return nullptr;
   }
   if (jbuf == nullptr) {
@@ -2906,7 +2922,7 @@ JNIEXPORT jlong JNICALL Java_tkrzw_File_append
 (JNIEnv* env, jobject jself, jbyteArray jbuf, jlong size, jobject jstatus) {
   tkrzw::PolyFile* file = GetFile(env, jself);
   if (file == nullptr) {
-    ThrowNullPointer(env);
+    ThrowIllegalArgument(env, "not opened file");
     return -1;
   }
   if (jbuf == nullptr) {
@@ -2942,7 +2958,7 @@ JNIEXPORT jobject JNICALL Java_tkrzw_File_truncate
 (JNIEnv* env, jobject jself, jlong size) {
   tkrzw::PolyFile* file = GetFile(env, jself);
   if (file == nullptr) {
-    ThrowNullPointer(env);
+    ThrowIllegalArgument(env, "not opened file");
     return nullptr;
   }
   const tkrzw::Status status = file->Truncate(size);
@@ -2953,7 +2969,7 @@ JNIEXPORT jobject JNICALL Java_tkrzw_File_synchronize
 (JNIEnv* env, jobject jself, jboolean hard, jlong off, jlong size) {
   tkrzw::PolyFile* file = GetFile(env, jself);
   if (file == nullptr) {
-    ThrowNullPointer(env);
+    ThrowIllegalArgument(env, "not opened file");
     return nullptr;
   }
   const tkrzw::Status status = file->Synchronize(hard, off, size);
@@ -2965,7 +2981,7 @@ JNIEXPORT jlong JNICALL Java_tkrzw_File_getSize
 (JNIEnv* env, jobject jself) {
   tkrzw::PolyFile* file = GetFile(env, jself);
   if (file == nullptr) {
-    ThrowNullPointer(env);
+    ThrowIllegalArgument(env, "not opened file");
     return -1;
   }
   return file->GetSizeSimple();
@@ -2976,7 +2992,7 @@ JNIEXPORT jstring JNICALL Java_tkrzw_File_getPath
 (JNIEnv* env, jobject jself) {
   tkrzw::PolyFile* file = GetFile(env, jself);
   if (file == nullptr) {
-    ThrowNullPointer(env);
+    ThrowIllegalArgument(env, "not opened file");
     return nullptr;
   }
   std::string path;
@@ -2991,7 +3007,11 @@ JNIEXPORT jstring JNICALL Java_tkrzw_File_getPath
 JNIEXPORT jobjectArray JNICALL Java_tkrzw_File_search
 (JNIEnv* env, jobject jself, jstring jmode, jbyteArray jpattern, jint capacity) {
   tkrzw::PolyFile* file = GetFile(env, jself);
-  if (file == nullptr || jmode == nullptr || jpattern == nullptr) {
+  if (file == nullptr) {
+    ThrowIllegalArgument(env, "not opened file");
+    return nullptr;
+  }
+  if (jmode == nullptr || jpattern == nullptr) {
     ThrowNullPointer(env);
     return nullptr;
   }
@@ -3017,26 +3037,30 @@ JNIEXPORT jstring JNICALL Java_tkrzw_File_toString
 (JNIEnv* env, jobject jself) {
   tkrzw::PolyFile* file = GetFile(env, jself);
   std::string expr = "tkrzw.File(";
-  std::string class_name = "unknown";
-  auto* in_file = file->GetInternalFile();
-  if (in_file != nullptr) {
-    const auto& file_type = in_file->GetType();
-    if (file_type == typeid(tkrzw::StdFile)) {
-      class_name = "StdFile";
-    } else if (file_type == typeid(tkrzw::MemoryMapParallelFile)) {
-      class_name = "MemoryMapParallelFile";
-    } else if (file_type == typeid(tkrzw::MemoryMapAtomicFile)) {
-      class_name = "MemoryMapAtomicFile";
-    } else if (file_type == typeid(tkrzw::PositionalParallelFile)) {
-      class_name = "PositionalParallelFile";
-    } else if (file_type == typeid(tkrzw::PositionalAtomicFile)) {
-      class_name = "PositionalAtomicFile";
+  if (file == nullptr) {
+    expr += "unopened";
+  } else {
+    std::string class_name = "unknown";
+    auto* in_file = file->GetInternalFile();
+    if (in_file != nullptr) {
+      const auto& file_type = in_file->GetType();
+      if (file_type == typeid(tkrzw::StdFile)) {
+        class_name = "StdFile";
+      } else if (file_type == typeid(tkrzw::MemoryMapParallelFile)) {
+        class_name = "MemoryMapParallelFile";
+      } else if (file_type == typeid(tkrzw::MemoryMapAtomicFile)) {
+        class_name = "MemoryMapAtomicFile";
+      } else if (file_type == typeid(tkrzw::PositionalParallelFile)) {
+        class_name = "PositionalParallelFile";
+      } else if (file_type == typeid(tkrzw::PositionalAtomicFile)) {
+        class_name = "PositionalAtomicFile";
+      }
     }
+    const std::string path = file->GetPathSimple();
+    const int64_t count = file->GetSizeSimple();
+    expr += tkrzw::StrCat("class=", class_name, ", path=", tkrzw::StrEscapeC(path, true),
+                          ", size=", count);
   }
-  const std::string path = file->GetPathSimple();
-  const int64_t count = file->GetSizeSimple();
-  expr += tkrzw::StrCat("class=", class_name, ", path=", tkrzw::StrEscapeC(path, true),
-                        ", size=", count);
   expr += ")";
   return NewString(env, expr.c_str());
 }

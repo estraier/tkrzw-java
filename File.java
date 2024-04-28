@@ -43,7 +43,8 @@ public class File {
 
   /**
    * Destructs the object and releases resources.
-   * @note The file is closed implicitly if it has not been closed.
+   * @note The file is closed implicitly if it has not been closed.  As long as you close the file
+   * explicitly, you don't have to call this method.
    */
   public native void destruct();
 

@@ -21,8 +21,7 @@ import java.util.Map;
  * @note All operations except for "open" and "close" are thread-safe; Multiple threads can access
  * the same dindex concurrently.  You can specify a data structure when you call the "open"
  * method.  Every opened index must be closed explicitly by the "close" method to avoid data
- * corruption.  Moreover, every unused index object should be destructed by the "destruct"
- * method to free resources.
+ * corruption.
  */
 public class Index {
   static {
@@ -43,7 +42,8 @@ public class Index {
 
   /**
    * Destructs the object and releases resources.
-   * @note The index is closed implicitly if it has not been closed.
+   * @note The index is closed implicitly if it has not been closed.  As long as you close the
+   * index explicitly, you don't have to call this method.
    */
   public native void destruct();
 

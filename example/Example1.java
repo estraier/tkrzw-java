@@ -53,9 +53,7 @@ public class Example1 {
     iter.destruct();
 
     // Closes the database.
-    // After using the database, it should be destructed explicitly.
     dbm.close();
-    dbm.destruct();
   }
 }
 
