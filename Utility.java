@@ -118,7 +118,7 @@ public class Utility {
   public static native byte[] serializeInt(long num);
 
   /**
-   * Serializes an integer into a big-endian binary sequence.
+   * Deserializes a big-endian binary sequence into an integer.
    * @param data a binary sequence.
    * @return The result integer.
    */
@@ -132,7 +132,7 @@ public class Utility {
   public static native byte[] serializeFloat(double num);
 
   /**
-   * Serializes an integer into a big-endian binary sequence.
+   * Deserializes a big-endian binary sequence into a floating-point number.
    * @param data a binary sequence.
    * @return The result floating-point number.
    */
