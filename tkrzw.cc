@@ -612,6 +612,34 @@ JNIEXPORT jint JNICALL Java_tkrzw_Utility_editDistanceLev
   return tkrzw::EditDistanceLev<std::vector<uint32_t>>(ucsa, ucsb);
 }
 
+// Implementation of Utility#serializeInt.
+JNIEXPORT jbyteArray JNICALL Java_tkrzw_Utility_serializeInt
+(JNIEnv* env, jclass jcls, jlong num) {
+  const std::string str = tkrzw::IntToStrBigEndian(num, sizeof(int64_t));
+  return NewByteArray(env, str);
+}
+
+// Implementation of Utility#deserializeInt.
+JNIEXPORT jlong JNICALL Java_tkrzw_Utility_deserializeInt
+(JNIEnv* env, jclass jcls, jbyteArray jdata) {
+  SoftByteArray data(env, jdata);
+  return tkrzw::StrToIntBigEndian(data.Get());
+}
+
+// Implementation of Utility#serializeFloat.
+JNIEXPORT jbyteArray JNICALL Java_tkrzw_Utility_serializeFloat
+(JNIEnv* env, jclass jcls, jdouble num) {
+  const std::string str = tkrzw::FloatToStrBigEndian(num, sizeof(double));
+  return NewByteArray(env, str);
+}
+
+// Implementation of Utility#deserializeFloat.
+JNIEXPORT jdouble JNICALL Java_tkrzw_Utility_deserializeFloat
+(JNIEnv* env, jclass jcls, jbyteArray jdata) {
+  SoftByteArray data(env, jdata);
+  return tkrzw::StrToFloatBigEndian(data.Get());
+}
+
 // Implementation of Future#destruct.
 JNIEXPORT void JNICALL Java_tkrzw_Future_destruct
 (JNIEnv* env, jobject jself) {

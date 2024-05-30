@@ -57,8 +57,9 @@ public class Index {
    * MemIndex class.  If the path ends with ".tkt", TreeDBM is used internally, which is
    * equivalent to using the FileIndex class.  If the key comparator of the tuning parameter is
    * not set, PairLexicalKeyComparator is set implicitly.  Other compatible key comparators are
-   * PairLexicalCaseKeyComparator, PairDecimalKeyComparator, PairHexadecimalKeyComparator, and
-   * PairRealNumberKeyComparator.  Other options can be specified as with DBM::open.
+   * PairLexicalCaseKeyComparator, PairDecimalKeyComparator, PairHexadecimalKeyComparator,
+   * PairRealNumberKeyComparator, and PairFloatBigEndianKeyComparator.  Other options can be
+   * specified as with DBM::open.
    */
   public native Status open(String path, boolean writable, Map<String, String> params);
 

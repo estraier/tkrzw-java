@@ -110,6 +110,34 @@ public class Utility {
    */
   public static native int editDistanceLev(String a, String b);
 
+  /**
+   * Serializes an integer into a big-endian binary sequence.
+   * @param num an integer.
+   * @return The result binary sequence.
+   */
+  public static native byte[] serializeInt(long num);
+
+  /**
+   * Serializes an integer into a big-endian binary sequence.
+   * @param data a binary sequence.
+   * @return The result integer.
+   */
+  public static native long deserializeInt(byte[] data);
+
+  /**
+   * Serializes a floating-point number into a big-endian binary sequence.
+   * @param num a floating-point number.
+   * @return The result binary sequence.
+   */
+  public static native byte[] serializeFloat(double num);
+
+  /**
+   * Serializes an integer into a big-endian binary sequence.
+   * @param data a binary sequence.
+   * @return The result floating-point number.
+   */
+  public static native double deserializeFloat(byte[] data);
+
   /** The flag whether loaded. */
   static private boolean loaded = false;
 }

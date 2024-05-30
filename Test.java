@@ -274,6 +274,12 @@ public class Test {
     check(Utility.editDistanceLev("", "") == 0);
     check(Utility.editDistanceLev("ac", "abc") == 1);
     check(Utility.editDistanceLev("あいう", "あう") == 1);
+    byte[] intSeq = Utility.serializeInt(-123456);
+    check(intSeq.length == 8);
+    check(Utility.deserializeInt(intSeq) == -123456);
+    byte[] floatSeq = Utility.serializeFloat(-123.456);
+    check(floatSeq.length == 8);
+    check(Utility.deserializeFloat(floatSeq) == -123.456);
     STDOUT.printf("  ... OK\n");
     return 0;
   }
