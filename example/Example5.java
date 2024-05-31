@@ -1,5 +1,5 @@
 /*************************************************************************************************
- * Example for secondary index
+ * Example for process methods
  *
  * Copyright 2020 Google LLC
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
@@ -17,44 +17,90 @@ import tkrzw.*;
 
 public class Example5 {
   public static void main(String[] args) {
-    // Opens the index.
-    Index index = new Index();
-    index.open("casket.tkt", true, "truncate=True,num_buckets=100").orDie();
+    // Opens the database.
+    DBM dbm = new DBM();
+    dbm.open("casket.tkh", true, "truncate=True,num_buckets=100");
 
-    // Adds records to the index.
-    // The key is a division name and the value is person name.
-    index.add("general", "anne").orDie();
-    index.add("general", "matthew").orDie();
-    index.add("general", "marilla").orDie();
-    index.add("sales", "gilbert").orDie();
+    // Sets records with lambda functions.
+    dbm.process("doc-1", (k, v)->"Tokyo is the capital city of Japan.".getBytes(), true);
+    dbm.process("doc-2", (k, v)->"Is she living in Tokyo, Japan?".getBytes(), true);
+    dbm.process("doc-3", (k, v)->"She must leave Tokyo!".getBytes(), true);
 
-    // Anne moves to the sales division.
-    index.remove("general", "anne").orDie();
-    index.add("sales", "anne").orDie();
+    // Lowers record values.
+    tkrzw.RecordProcessor lower = (key, value) -> {
+      // If no matching record, None is given as the value.
+      if (value == null) return null;
+      // Sets the new value.
+      return new String(value).toLowerCase().getBytes();
+    };
+    dbm.process("doc-1", lower, true);
+    dbm.process("doc-2", lower, true);
+    dbm.process("doc-3", lower, true);
+    dbm.process("non-existent", lower, true);
 
-    // Prints all members for each division.
-    String[] divisions = {"general", "sales"};
-    for (String division : divisions) {
-      System.out.println(division);
-      String[] members = index.getValues(division, 0);
-      for (String member : members) {
-        System.out.println(" -- " + member);
-      }
-    }
+    // Adds multiple records at once.
+    RecordProcessor.WithKey[] ops1 = {
+      new RecordProcessor.WithKey("doc-4", (k, v)->"Tokyo Go!".getBytes()),
+      new RecordProcessor.WithKey("doc-5", (k, v)->"Japan Go!".getBytes()),
+    };
+    dbm.processMulti(ops1, true);
 
-    // Prints every record by iterator.
-    IndexIterator iter = index.makeIterator();
+    // Modifies multiple records at once.
+    RecordProcessor.WithKey[] ops2 = {
+      new RecordProcessor.WithKey("doc-4", lower),
+      new RecordProcessor.WithKey("doc-5", lower),
+    };
+    dbm.processMulti(ops2, true);
+
+    // Checks the whole content.
+    // This uses an external iterator and is relavively slow.
+    Iterator iter = dbm.makeIterator();
     iter.first();
     while (true) {
       String[] record = iter.getString();
-      if (record == null) break;
+      if (record == null) {
+        break;
+      }
       System.out.println(record[0] + ": " + record[1]);
       iter.next();
     }
     iter.destruct();
 
-    // Closes the index.
-    index.close().orDie();
+    // Opertion for word counting.
+    Map<String, Integer> word_counts = new HashMap<String, Integer>();
+    RecordProcessor wordCounter = (key, value) -> {
+      if (key == null) return null;
+      String[] words = new String(value).split("\\b");
+      for (String word : words) {
+        if (word.length() < 1) continue;
+        char c = word.charAt(0);
+        if (c < 'a' || c > 'z') continue;
+        int old_count = word_counts.getOrDefault(word, 0);
+        word_counts.put(word, old_count + 1);
+      }
+      return null;
+    };
+
+    // The second parameter should be false if the value is not updated.
+    dbm.processEach(wordCounter, false);
+    for(Map.Entry<String, Integer> entry : word_counts.entrySet()) {
+      System.out.println(entry.getKey() + ":" + entry.getValue());
+    }
+
+    // Returning RecordProcessor.REMOVE by the callbacks removes the record.
+    dbm.process("doc-1", (k, v)->RecordProcessor.REMOVE, true);
+    System.out.println(dbm.count());
+    RecordProcessor.WithKey[] ops3 = {
+      new RecordProcessor.WithKey("doc-2", (k, v)->RecordProcessor.REMOVE),
+      new RecordProcessor.WithKey("doc-3", (k, v)->RecordProcessor.REMOVE),
+    };
+    dbm.processMulti(ops3, true);
+    System.out.println(dbm.count());
+    dbm.processEach((k, v)->RecordProcessor.REMOVE, true);
+    System.out.println(dbm.count());
+
+    // Closes the database.
+    dbm.close().orDie();
   }
 }
 

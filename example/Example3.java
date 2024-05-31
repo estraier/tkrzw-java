@@ -1,5 +1,5 @@
 /*************************************************************************************************
- * Example for the asynchronous API
+ * Example for key comparators of the tree database
  *
  * Copyright 2020 Google LLC
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
@@ -15,38 +15,131 @@ import tkrzw.*;
 
 public class Example3 {
   public static void main(String[] args) {
-    // Prepares the database.
     DBM dbm = new DBM();
-    dbm.open("casket.tkh", true, "truncate=True,num_buckets=100");
 
-    // Prepares the asynchronous adapter with 4 worker threads.
-    AsyncDBM async= new AsyncDBM(dbm, 4);
+    // Opens a new database with the default key comparator (LexicalKeyComparator).
+    dbm.open("casket.tkt", true, "truncate=True").orDie();
 
-    // Executes the Set method asynchronously.
-    Future<Status> set_future = async.set("hello", "world");
-    // Does something in the foreground.
-    System.out.println("Setting a record");
-    // Checks the result after awaiting the set operation.
-    Status status = set_future.get();
-    if (!status.isOK()) {
-      System.out.println("ERROR: " + status.toString());
+    // Sets records with the key being a big-endian binary of an integer.
+    // e.g: "\x00\x00\x00\x00\x00\x00\x00\x31" -> "hop"
+    dbm.set(Utility.serializeInt(1), "hop".getBytes()).orDie();
+    dbm.set(Utility.serializeInt(11), "step".getBytes()).orDie();
+    dbm.set(Utility.serializeInt(111), "jump".getBytes()).orDie();
+
+    // Gets records with the key being a big-endian binary of an integer.
+    System.out.println(new String(dbm.get(Utility.serializeInt(1))));
+    System.out.println(new String(dbm.get(Utility.serializeInt(11))));
+    System.out.println(new String(dbm.get(Utility.serializeInt(111))));
+
+    // Lists up all records, restoring keys into integers.
+    Iterator iter = dbm.makeIterator();
+    iter.first();
+    while (true) {
+      byte[][] record = iter.get();
+      if (record == null) {
+        break;
+      }
+      System.out.println(Utility.deserializeInt(record[0]) + ": " + new String(record[1]));
+      iter.next();
     }
-
-    // Executes the get method asynchronously.
-    Future<Status.And<String>> get_future = async.get("hello");
-    // Does something in the foreground.
-    System.out.println("Getting a record");
-    // Checks the result after awaiting the get operation.
-    Status.And<String> get_result = get_future.get();
-    if (get_result.status.isOK()) {
-      System.out.println("VALUE: " + get_result.value);
-    }
-
-    // Releases the asynchronous adapter.
-    async.destruct();
+    iter.destruct();
 
     // Closes the database.
-    dbm.close();
+    dbm.close().orDie();
+    dbm.destruct();
+
+    // Opens a new database with the decimal integer comparator.
+    dbm.open("casket.tkt", true, "truncate=True,key_comparator=Decimal").orDie();
+
+    // Sets records with the key being a decimal string of an integer.
+    // e.g: "1" -> "hop"
+    dbm.set("1", "hop").orDie();
+    dbm.set("11", "step").orDie();
+    dbm.set("111", "jump").orDie();
+    
+    // Gets records with the key being a decimal string of an integer.
+    System.out.println(dbm.get("1"));
+    System.out.println(dbm.get("11"));
+    System.out.println(dbm.get("111"));
+
+    // Lists up all records, restoring keys into integers.
+    iter = dbm.makeIterator();
+    iter.first();
+    while (true) {
+      String[] record = iter.getString();
+      if (record == null) {
+        break;
+      }
+      System.out.println(Long.parseLong(record[0]) + ": " + record[1]);
+      iter.next();
+    }
+    iter.destruct();
+
+    // Closes the database.
+    dbm.close().orDie();
+    dbm.destruct();
+
+    // Opens a new database with the decimal real number comparator.
+    dbm.open("casket.tkt", true, "truncate=True,key_comparator=RealNumber").orDie();
+
+    // Sets records with the key being a decimal string of a real number.
+    // e.g: "1.5" -> "hop"
+    dbm.set("1.5", "hop").orDie();
+    dbm.set("11.5", "step").orDie();
+    dbm.set("111.5", "jump").orDie();
+    
+    // Gets records with the key being a decimal string of a real number.
+    System.out.println(dbm.get("1.5"));
+    System.out.println(dbm.get("11.5"));
+    System.out.println(dbm.get("111.5"));
+
+    // Lists up all records, restoring keys into floating-point numbers.
+    iter = dbm.makeIterator();
+    iter.first();
+    while (true) {
+      String[] record = iter.getString();
+      if (record == null) {
+        break;
+      }
+      System.out.println(Double.parseDouble(record[0]) + ": " + record[1]);
+      iter.next();
+    }
+    iter.destruct();
+
+    // Closes the database.
+    dbm.close().orDie();
+    dbm.destruct();
+    
+    // Opens a new database with the big-endian floating-point numbers comparator.
+    dbm.open("casket.tkt", true, "truncate=True,key_comparator=FloatBigEndian").orDie();
+
+    // Sets records with the key being a big-endian binary of a floating-point number.
+    // e.g: "\x3F\xF8\x00\x00\x00\x00\x00\x00" -> "hop"
+    dbm.set(Utility.serializeFloat(1.5), "hop".getBytes()).orDie();
+    dbm.set(Utility.serializeFloat(11.5), "step".getBytes()).orDie();
+    dbm.set(Utility.serializeFloat(111.5), "jump".getBytes()).orDie();
+    
+    // Gets records with the key being a big-endian binary of a floating-point number.
+    System.out.println(new String(dbm.get(Utility.serializeFloat(1.5))));
+    System.out.println(new String(dbm.get(Utility.serializeFloat(11.5))));
+    System.out.println(new String(dbm.get(Utility.serializeFloat(111.5))));
+
+    // Lists up all records, restoring keys into floating-point numbers.
+    iter = dbm.makeIterator();
+    iter.first();
+    while (true) {
+      byte[][] record = iter.get();
+      if (record == null) {
+        break;
+      }
+      System.out.println(Utility.deserializeFloat(record[0]) + ": " + new String(record[1]));
+      iter.next();
+    }
+    iter.destruct();
+    
+    // Closes the database.
+    dbm.close().orDie();
+    dbm.destruct();
   }
 }
 
