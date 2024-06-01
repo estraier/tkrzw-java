@@ -23,13 +23,13 @@ public class Example3 {
     // Sets records with the key being a big-endian binary of an integer.
     // e.g: "\x00\x00\x00\x00\x00\x00\x00\x31" -> "hop"
     dbm.set(Utility.serializeInt(1), "hop".getBytes()).orDie();
-    dbm.set(Utility.serializeInt(11), "step".getBytes()).orDie();
-    dbm.set(Utility.serializeInt(111), "jump".getBytes()).orDie();
+    dbm.set(Utility.serializeInt(256), "step".getBytes()).orDie();
+    dbm.set(Utility.serializeInt(32), "jump".getBytes()).orDie();
 
     // Gets records with the key being a big-endian binary of an integer.
     System.out.println(new String(dbm.get(Utility.serializeInt(1))));
-    System.out.println(new String(dbm.get(Utility.serializeInt(11))));
-    System.out.println(new String(dbm.get(Utility.serializeInt(111))));
+    System.out.println(new String(dbm.get(Utility.serializeInt(256))));
+    System.out.println(new String(dbm.get(Utility.serializeInt(32))));
 
     // Lists up all records, restoring keys into integers.
     Iterator iter = dbm.makeIterator();
@@ -54,13 +54,13 @@ public class Example3 {
     // Sets records with the key being a decimal string of an integer.
     // e.g: "1" -> "hop"
     dbm.set("1", "hop").orDie();
-    dbm.set("11", "step").orDie();
-    dbm.set("111", "jump").orDie();
-    
+    dbm.set("256", "step").orDie();
+    dbm.set("32", "jump").orDie();
+
     // Gets records with the key being a decimal string of an integer.
     System.out.println(dbm.get("1"));
-    System.out.println(dbm.get("11"));
-    System.out.println(dbm.get("111"));
+    System.out.println(dbm.get("256"));
+    System.out.println(dbm.get("32"));
 
     // Lists up all records, restoring keys into integers.
     iter = dbm.makeIterator();
@@ -85,13 +85,13 @@ public class Example3 {
     // Sets records with the key being a decimal string of a real number.
     // e.g: "1.5" -> "hop"
     dbm.set("1.5", "hop").orDie();
-    dbm.set("11.5", "step").orDie();
-    dbm.set("111.5", "jump").orDie();
-    
+    dbm.set("256.5", "step").orDie();
+    dbm.set("32.5", "jump").orDie();
+
     // Gets records with the key being a decimal string of a real number.
     System.out.println(dbm.get("1.5"));
-    System.out.println(dbm.get("11.5"));
-    System.out.println(dbm.get("111.5"));
+    System.out.println(dbm.get("256.5"));
+    System.out.println(dbm.get("32.5"));
 
     // Lists up all records, restoring keys into floating-point numbers.
     iter = dbm.makeIterator();
@@ -109,20 +109,20 @@ public class Example3 {
     // Closes the database.
     dbm.close().orDie();
     dbm.destruct();
-    
+
     // Opens a new database with the big-endian floating-point numbers comparator.
     dbm.open("casket.tkt", true, "truncate=True,key_comparator=FloatBigEndian").orDie();
 
     // Sets records with the key being a big-endian binary of a floating-point number.
     // e.g: "\x3F\xF8\x00\x00\x00\x00\x00\x00" -> "hop"
     dbm.set(Utility.serializeFloat(1.5), "hop".getBytes()).orDie();
-    dbm.set(Utility.serializeFloat(11.5), "step".getBytes()).orDie();
-    dbm.set(Utility.serializeFloat(111.5), "jump".getBytes()).orDie();
-    
+    dbm.set(Utility.serializeFloat(256.5), "step".getBytes()).orDie();
+    dbm.set(Utility.serializeFloat(32.5), "jump".getBytes()).orDie();
+
     // Gets records with the key being a big-endian binary of a floating-point number.
     System.out.println(new String(dbm.get(Utility.serializeFloat(1.5))));
-    System.out.println(new String(dbm.get(Utility.serializeFloat(11.5))));
-    System.out.println(new String(dbm.get(Utility.serializeFloat(111.5))));
+    System.out.println(new String(dbm.get(Utility.serializeFloat(256.5))));
+    System.out.println(new String(dbm.get(Utility.serializeFloat(32.5))));
 
     // Lists up all records, restoring keys into floating-point numbers.
     iter = dbm.makeIterator();
@@ -136,7 +136,7 @@ public class Example3 {
       iter.next();
     }
     iter.destruct();
-    
+
     // Closes the database.
     dbm.close().orDie();
     dbm.destruct();
