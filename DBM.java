@@ -125,7 +125,8 @@ public class DBM {
    * the lexical order, "LexicalCaseKeyComparator" for the lexical order ignoring case,
    * "DecimalKeyComparator" for the order of decimal integer numeric expressions,
    * "HexadecimalKeyComparator" for the order of hexadecimal integer numeric expressions,
-   * "RealNumberKeyComparator" for the order of decimal real number expressions, and
+   * "RealNumberKeyComparator" for the order of decimal real number expressions,
+   * "SignedBigEndianKeyComparator" for the order of binary signed integer expressions, and
    * "FloatBigEndianKeyComparator" for the order of binary float-number expressions.
    * </ul>
    * <p>For SkipDBM, these optional parameters are supported.

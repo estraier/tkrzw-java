@@ -58,8 +58,8 @@ public class Index {
    * equivalent to using the FileIndex class.  If the key comparator of the tuning parameter is
    * not set, PairLexicalKeyComparator is set implicitly.  Other compatible key comparators are
    * PairLexicalCaseKeyComparator, PairDecimalKeyComparator, PairHexadecimalKeyComparator,
-   * PairRealNumberKeyComparator, and PairFloatBigEndianKeyComparator.  Other options can be
-   * specified as with DBM::open.
+   * PairRealNumberKeyComparator, PairSignedBigEndianKeyComparator, and
+   * PairFloatBigEndianKeyComparator.  Other options can be specified as with DBM::open.
    */
   public native Status open(String path, boolean writable, Map<String, String> params);
 

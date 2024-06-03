@@ -303,6 +303,37 @@ public class Example3 {
     dbm.close().orDie();
     dbm.destruct();
 
+    // Opens a new database with the big-endian signed integers comparator.
+    dbm.open("casket.tkt", true, "truncate=True,key_comparator=SignedBigEndian").orDie();
+
+    // Sets records with the key being a big-endian binary of a floating-point number.
+    // e.g: "\x00\x00\x00\x00\x00\x00\x00\x31" -> "hop"
+    dbm.set(Utility.serializeInt(-1), "hop".getBytes()).orDie();
+    dbm.set(Utility.serializeInt(-256), "step".getBytes()).orDie();
+    dbm.set(Utility.serializeInt(-32), "jump".getBytes()).orDie();
+
+    // Gets records with the key being a big-endian binary of a floating-point number.
+    System.out.println(new String(dbm.get(Utility.serializeInt(-1))));
+    System.out.println(new String(dbm.get(Utility.serializeInt(-256))));
+    System.out.println(new String(dbm.get(Utility.serializeInt(-32))));
+
+    // Lists up all records, restoring keys into floating-point numbers.
+    iter = dbm.makeIterator();
+    iter.first();
+    while (true) {
+      byte[][] record = iter.get();
+      if (record == null) {
+        break;
+      }
+      System.out.println(Utility.deserializeInt(record[0]) + ": " + new String(record[1]));
+      iter.next();
+    }
+    iter.destruct();
+
+    // Closes the database.
+    dbm.close().orDie();
+    dbm.destruct();
+
     // Opens a new database with the big-endian floating-point numbers comparator.
     dbm.open("casket.tkt", true, "truncate=True,key_comparator=FloatBigEndian").orDie();
 
