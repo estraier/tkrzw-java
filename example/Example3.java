@@ -119,7 +119,7 @@ public class Example3 {
     dbm.set(Utility.serializeInt(-256), "step".getBytes()).orDie();
     dbm.set(Utility.serializeInt(-32), "jump".getBytes()).orDie();
 
-    // Gets records with the key being a big-endian binary of a floating-point number.
+    // Gets records with the key being a big-endian binary of a signed integer.
     System.out.println(new String(dbm.get(Utility.serializeInt(-1))));
     System.out.println(new String(dbm.get(Utility.serializeInt(-256))));
     System.out.println(new String(dbm.get(Utility.serializeInt(-32))));
