@@ -113,7 +113,7 @@ public class Example3 {
     // Opens a new database with the big-endian signed integers comparator.
     dbm.open("casket.tkt", true, "truncate=True,key_comparator=SignedBigEndian").orDie();
 
-    // Sets records with the key being a big-endian binary of a floating-point number.
+    // Sets records with the key being a big-endian binary of a signed integer.
     // e.g: "\x00\x00\x00\x00\x00\x00\x00\x31" -> "hop"
     dbm.set(Utility.serializeInt(-1), "hop".getBytes()).orDie();
     dbm.set(Utility.serializeInt(-256), "step".getBytes()).orDie();
@@ -124,7 +124,7 @@ public class Example3 {
     System.out.println(new String(dbm.get(Utility.serializeInt(-256))));
     System.out.println(new String(dbm.get(Utility.serializeInt(-32))));
 
-    // Lists up all records, restoring keys into floating-point numbers.
+    // Lists up all records, restoring keys into signed integers.
     iter = dbm.makeIterator();
     iter.first();
     while (true) {
