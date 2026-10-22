@@ -1,0 +1,68 @@
+# Makefile for Tkrzw for Java on Windows
+
+PACKAGE = tkrzw-java
+VERSION = 0.1.32
+
+!IFNDEF TKRZW_DIR
+!IF EXIST(..\tkrzw\tkrzw.lib)
+TKRZW_DIR = ..\tkrzw
+!ELSE
+TKRZW_DIR = ..\tkrzw-1.0.34
+!ENDIF
+!ENDIF
+
+TKRZW_INC = $(TKRZW_DIR)
+TKRZW_LIB = $(TKRZW_DIR)\tkrzw.lib
+
+!IFNDEF JAVA_HOME
+JAVA_HOME = C:\Program Files\Java\jdk-17
+!ENDIF
+
+JAVAC = "$(JAVA_HOME)\bin\javac.exe"
+JAR = "$(JAVA_HOME)\bin\jar.exe"
+JAVA = "$(JAVA_HOME)\bin\java.exe"
+
+CL = cl
+LINK = link
+CXXFLAGS = /std:c++17 /Zc:__cplusplus /nologo /O2 /EHsc /W3 /wd4244 /wd4267 /wd4334 /MT
+CLFLAGS = /I "." /I "$(JAVA_HOME)\include" /I "$(JAVA_HOME)\include\win32" /I "$(TKRZW_INC)"
+LINKFLAGS = /nologo
+
+JAVAFILES = AsyncDBM.java DBM.java File.java Future.java Index.java \
+            IndexIterator.java Iterator.java RecordProcessor.java \
+            Status.java StatusException.java Test.java Utility.java
+
+all : tkrzw.jar jtkrzw.dll
+	@echo #
+	@echo #================================================================
+	@echo # Ready to install.
+	@echo #================================================================
+
+tkrzw.jar : $(JAVAFILES)
+	$(JAVAC) -encoding UTF-8 -d . -h . $(JAVAFILES)
+	$(JAR) cvf $@ tkrzw\*.class
+
+jtkrzw.dll : tkrzw.obj
+	$(LINK) $(LINKFLAGS) /DLL /OUT:$@ tkrzw.obj "$(TKRZW_LIB)"
+
+tkrzw.obj : tkrzw.cc tkrzw.jar
+	$(CL) /c $(CXXFLAGS) $(CLFLAGS) tkrzw.cc
+
+clean :
+	-del *.obj *.lib *.dll *.exp *.class tkrzw.jar /F /Q > NUL: 2>&1
+	-rd /S /Q tkrzw > NUL: 2>&1
+	-del tkrzw_*.h casket* /F /Q > NUL: 2>&1
+
+check : all
+	$(JAVA) -D"java.library.path=." -cp tkrzw.jar tkrzw.Test utility
+	$(JAVA) -D"java.library.path=." -cp tkrzw.jar tkrzw.Test status
+	$(JAVA) -D"java.library.path=." -cp tkrzw.jar tkrzw.Test iter
+	$(JAVA) -D"java.library.path=." -cp tkrzw.jar tkrzw.Test thread
+	$(JAVA) -D"java.library.path=." -cp tkrzw.jar tkrzw.Test search
+	$(JAVA) -D"java.library.path=." -cp tkrzw.jar tkrzw.Test export
+	$(JAVA) -D"java.library.path=." -cp tkrzw.jar tkrzw.Test file
+	$(JAVA) -D"java.library.path=." -cp tkrzw.jar tkrzw.Test index
+	@echo #
+	@echo #================================================================
+	@echo # Checking completed.
+	@echo #================================================================
